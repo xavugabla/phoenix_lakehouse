@@ -1,0 +1,33 @@
+# Minimal requirements for Prefect work pool
+# These are the essential packages needed for the CENACE pipeline to run
+
+# Core Prefect (usually pre-installed, but include for safety)
+prefect>=2.14.0
+
+# Data Processing
+pandas>=2.0.0,<3.0.0
+numpy>=1.24.0,<2.0.0
+pyarrow>=14.0.0
+
+# HTTP & API
+requests>=2.31.0
+urllib3>=2.0.0
+
+# Configuration
+PyYAML>=6.0
+python-dotenv>=1.0.0
+
+# Data Validation
+pydantic>=2.0.0
+
+# Logging
+structlog>=23.1.0
+
+# Google Cloud Storage
+google-cloud-storage>=2.10.0
+google-auth>=2.23.0
+
+# Date/Time utilities
+python-dateutil>=2.8.0
+pytz>=2023.3
+

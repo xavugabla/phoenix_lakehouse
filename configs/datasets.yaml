@@ -1,0 +1,172 @@
+# Dataset Configuration for CENACE Pipeline
+# This file defines parameters for each dataset type in the pipeline
+
+defaults:
+  # Base paths
+  raw_root: "data/raw"
+  staged_root: "data/staged"
+  consolidated_root: "data/consolidated"
+  local_root: "data/local"
+  
+  # API settings
+  api_base_url: "https://ws01.cenace.gob.mx:8082"
+  user_agent: "CENACE-Data-Collector/1.0"
+  verify_ssl: false  # CENACE uses self-signed certificates
+  timeout: 60
+  
+  # Retry settings
+  retries:
+    total: 5
+    backoff: 0.5
+    max_delay: 60
+  
+  # Rate limiting
+  rate_limit_delay: 3  # seconds between requests
+  
+  # Storage (DEPRECATED - see 'lakehouse' section for new configuration)
+  gcs_bucket: "novogrid-workqueue"
+  gcs_prefix: "data/cenace"
+  
+  # Partitioning
+  partition_format: "hive"  # hive-style partitioning (market=MDA/region=SIN/...)
+
+datasets:
+  cenace_pml:
+    description: "CENACE PML (Precios Marginales Locales) - Locational Marginal Prices"
+    api_path: "/SWPML/SIM"
+    markets: ["MDA", "MTR"]
+    regions: ["SIN", "BCA", "BCS"]
+    
+    # API constraints
+    max_nodes_per_request: 20
+    max_days_per_request: 7
+    
+    # Data structure
+    raw_format: "json"
+    partition_keys: ["market", "region", "node", "year"]
+    
+    # Catalog reference
+    catalog_file: "catalogues/cenace_catalogues/cenace_node_catalog.json"
+    catalog_key: "nodes"
+    
+    # Transformation
+    schema_version: "pml_v1"
+    required_fields: ["timestamp", "node", "price", "market", "region"]
+    
+  cenace_pend:
+    description: "CENACE PEND (Precios de Energía en Nodos Distribuidos) - Distributed Node Energy Prices"
+    api_path: "/SWPEND/SIM"
+    markets: ["MDA", "MTR"]
+    regions: ["SIN", "BCA", "BCS"]
+    
+    # API constraints
+    max_zones_per_request: 10
+    max_days_per_request: 7
+    
+    # Data structure
+    raw_format: "json"
+    partition_keys: ["market", "region", "zone", "year"]
+    
+    # Catalog reference
+    catalog_file: "catalogues/cenace_catalogues/cenace_load_zones.json"
+    catalog_key: "zones"
+    
+    # Transformation
+    schema_version: "pend_v1"
+    required_fields: ["timestamp", "zone", "pz", "pz_ene", "pz_per", "pz_cng", "market", "region"]
+    
+  cenace_psc:
+    description: "CENACE PSC (Precios de Servicios Conexos) - Ancillary Services Prices"
+    api_path: "/SWPSC/SIM"
+    markets: ["MDA", "MTR"]
+    regions: ["SIN", "BCA", "BCS"]
+    
+    # API constraints
+    max_zones_per_request: 1  # PSC is system-level (one zone per system)
+    max_days_per_request: 7
+    
+    # Data structure
+    raw_format: "json"
+    partition_keys: ["market", "region", "zone", "year"]
+    
+    # Catalog reference
+    catalog_file: "catalogues/cenace_catalogues/cenace_reserve_zones.json"
+    catalog_key: "zones"
+    
+    # Transformation
+    schema_version: "psc_v1"
+    required_fields: ["timestamp", "zone", "price", "service_type", "market", "region"]
+
+# Storage configuration
+storage:
+  local:
+    base_path: "data/local"
+    prefer_consolidated: true  # Prefer consolidated files over chunked
+    
+  gcs:
+    bucket: "novogrid-workqueue"
+    prefix: "data/cenace"
+    enable_versioning: false
+    checksum_algorithm: "md5"
+
+# Consolidation settings
+consolidation:
+  # Partition strategy
+  partition_by: ["market", "region", "zone"]  # or ["market", "region", "node"] for PML
+  time_partition: "year"  # year, month, or all
+  
+  # File optimization
+  compression: "snappy"
+  row_group_size: 134217728  # 128MB row groups (128 * 1024 * 1024)
+  
+  # Deduplication
+  deduplicate: true
+  sort_by: ["timestamp"]
+
+# Catalog enrichment
+catalog:
+  base_path: "catalogues/cenace_catalogues"
+  output_format: ["json", "parquet"]
+  partition_by: ["region"]
+  incremental: true  # Update from manifests instead of full scans
+
+# Monitoring
+monitoring:
+  # Data quality checks
+  min_rows_per_partition: 1
+  max_missing_days: 7
+  
+  # Alerts
+  alert_on_failure: true
+  alert_on_stale_data: true
+  stale_threshold_days: 2
+
+# ============================================================================
+# LAKEHOUSE CONFIGURATION
+# ============================================================================
+lakehouse:
+  # The GCS bucket that will store the Iceberg tables and data.
+  gcs_bucket: "lakehouse_phoenix"
+
+  # A top-level prefix within the GCS bucket for organization.
+  # Empty string means tables go directly in the bucket root (cleaner structure).
+  gcs_prefix: ""
+
+  # Configuration for the Iceberg Catalog, which manages table metadata.
+  # 
+  # Catalog types:
+  #   - "file": File-based JSON catalog (for fully offline workflows)
+  #   - "bigquery": BigQuery metastore catalog (recommended for production)
+  #
+  # Set to "bigquery" so Prefect flows discover tables via BigQuery and we can
+  # centralize metadata, permissions, and schemas there.
+  catalog_type: "bigquery"
+  catalog_file: "catalogues/iceberg_catalog.json"  # Still used as a fallback map
+  
+  # BigQuery catalog configuration (optional, only used if catalog_type is "bigquery")
+  catalog:
+    name: "main"  # A logical name for this catalog.
+    project: "novagrid-476915"
+    dataset: "novagrid_dataset"
+    # Requires GOOGLE_APPLICATION_CREDENTIALS or workload identity with BigQuery + GCS access.
+

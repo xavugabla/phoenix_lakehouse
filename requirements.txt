@@ -1,0 +1,118 @@
+# ============================================================================
+# Data Manager - Python Dependencies
+# ============================================================================
+# 
+# Install with: pip install -r requirements.txt
+#
+# For development: pip install -r requirements.txt -r requirements-dev.txt
+# ============================================================================
+
+# ============================================================================
+# CORE DEPENDENCIES
+# ============================================================================
+
+# Orchestration
+prefect>=2.14.0
+
+# Data Processing
+pandas>=2.0.0,<3.0.0
+numpy>=1.24.0,<2.0.0
+pyarrow>=14.0.0                         # Parquet support
+
+# HTTP & API
+requests>=2.31.0
+urllib3>=2.0.0
+
+# Configuration
+PyYAML>=6.0
+python-dotenv>=1.0.0                    # Environment variable management
+
+# CLI
+click>=8.1.0                            # Command-line interface
+rich>=13.0.0                            # Beautiful terminal output
+tqdm>=4.65.0                            # Progress bars
+
+# Date/Time
+python-dateutil>=2.8.0
+pytz>=2023.3
+
+gcsfs>=2023.6.0                         # GCS filesystem support
+
+
+# ============================================================================
+# CLOUD STORAGE & DATABASES
+# ============================================================================
+
+# Google Cloud Platform
+google-cloud-storage>=2.10.0
+google-cloud-bigquery>=3.11.0
+google-auth>=2.23.0
+
+# AWS (for pricing data)
+boto3>=1.28.0                           # AWS SDK
+botocore>=1.31.0
+
+
+# ============================================================================
+# WEB SCRAPING
+# ============================================================================
+
+beautifulsoup4>=4.12.0                  # HTML parsing
+lxml>=4.9.0                             # XML/HTML parser
+html5lib>=1.1                           # HTML5 parser
+
+
+# ============================================================================
+# DATA VALIDATION & QUALITY
+# ============================================================================
+
+jsonschema>=4.19.0                      # JSON schema validation
+cerberus>=1.3.5                         # Data validation
+pydantic>=2.0.0                         # Data validation with type hints
+
+
+# ============================================================================
+# UTILITIES
+# ============================================================================
+
+# File handling
+openpyxl>=3.1.0                         # Excel file support
+xlrd>=2.0.1                             # Legacy Excel support
+
+# Compression
+gzip-reader>=0.1.0
+
+# Logging
+structlog>=23.1.0                       # Structured logging
+
+# Retry logic
+tenacity>=8.2.0                         # Retry decorator
+
+# Caching
+diskcache>=5.6.0                        # Disk-based caching
+
+
+# ============================================================================
+# OPTIONAL DEPENDENCIES
+# ============================================================================
+
+# Geospatial (for OSM data)
+# Uncomment if needed:
+# geopy>=2.4.0
+# shapely>=2.0.0
+# geopandas>=0.14.0
+
+# Advanced data processing
+# Uncomment if needed:
+# dask>=2023.9.0                        # Parallel computing
+# polars>=0.19.0                        # Fast DataFrame library
+
+# Statistical Analysis & Forecasting
+statsmodels>=0.14.0                    # Time series analysis and forecasting
+
+# Database connectors (if needed)
+# Uncomment if needed:
+# psycopg2-binary>=2.9.0                # PostgreSQL
+# pymongo>=4.5.0                        # MongoDB
+# sqlalchemy>=2.0.0                     # SQL toolkit
+
