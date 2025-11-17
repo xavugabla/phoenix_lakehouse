@@ -1,5 +1,5 @@
 """
-Consolidation task for CENACE PEND data.
+Consolidation task for CENACE PML (Precios Marginales Locales) data.
 
 Merges staged partitions and appends them to the Iceberg Lakehouse table.
 """
@@ -8,22 +8,22 @@ import pandas as pd
 from prefect import task
 import structlog
 
-from pipeline_tasks.config import load_config
-from pipeline_tasks.io.local import read_parquet
-from pipeline_tasks.io.catalog_sync import publish_table_metadata
+from lakehouse_core.config import load_config
+from lakehouse_core.io.local import read_parquet
+from lakehouse_core.io.catalog_sync import publish_table_metadata
 from pyiceberg.catalog import load_catalog
 import pyarrow as pa
 
 logger = structlog.get_logger()
 
 
-@task(name="consolidate_cenace_pend", retries=2, log_prints=True)
-def consolidate_cenace_pend(
+@task(name="consolidate_cenace_pml", retries=2, log_prints=True)
+def consolidate_cenace_pml(
     staged_partitions: List[str],
     config_path: Optional[str] = None
 ) -> Dict[str, int]:
     """
-    Consolidates staged PEND data and appends it to the 'pend' Iceberg table.
+    Consolidates staged PML data and appends it to the 'pml' Iceberg table.
 
     Args:
         staged_partitions: A list of paths to staged Parquet files.
@@ -36,7 +36,7 @@ def consolidate_cenace_pend(
         logger.warning("No staged partitions provided for consolidation.")
         return {"rows_appended": 0}
 
-    logger.info(f"Consolidating {len(staged_partitions)} staged PEND partitions.")
+    logger.info(f"Consolidating {len(staged_partitions)} staged PML partitions.")
 
     try:
         # Load all staged data into a single DataFrame
@@ -48,22 +48,14 @@ def consolidate_cenace_pend(
         combined_df = pd.concat(dfs, ignore_index=True)
 
         # --- Data Cleaning and Schema Alignment ---
-        # Ensure timestamp is in the correct format (timezone-aware UTC)
         if 'timestamp' in combined_df.columns:
             combined_df['timestamp'] = pd.to_datetime(combined_df['timestamp'], utc=True)
         
-        # Add 'system' column if it's missing (required by Iceberg schema)
-        # This can be inferred or defaulted based on your system's logic
         if 'system' not in combined_df.columns and 'region' in combined_df.columns:
-             # A simple logic to map region to system, can be improved
             combined_df['system'] = combined_df['region'].apply(
                 lambda r: 'BCS' if r == 'BCS' else ('BCA' if r == 'BCA' else 'SIN')
             )
         
-        # Ensure all required columns from the master schema exist
-        # PyIceberg will handle type casting, but column presence is important
-        # This step is simplified as PyIceberg's schema enforcement is strict
-
         logger.info(f"Consolidated into a DataFrame with {len(combined_df)} rows.")
 
         # --- Load Iceberg Table and Append Data ---
@@ -75,7 +67,7 @@ def consolidate_cenace_pend(
         namespace = config.lakehouse.catalog.dataset
         prefix = config.lakehouse.gcs_prefix.rstrip("/") if config.lakehouse.gcs_prefix else ""
         base_location = f"gs://{config.lakehouse.gcs_bucket}/{prefix}" if prefix else f"gs://{config.lakehouse.gcs_bucket}"
-        table_identifier = f"{namespace}.pend"
+        table_identifier = f"{namespace}.pml"
         
         write_catalog = load_catalog(
             "consolidation_write_catalog",
@@ -89,14 +81,14 @@ def consolidate_cenace_pend(
         try:
             write_catalog.create_namespace(namespace)
         except Exception:
-            pass  # Namespace already exists
+            pass
         
         # Create table if it doesn't exist
-        from pipeline_tasks.schemas.master_schemas import MASTER_SCHEMAS
+        from lakehouse_core.schemas.master_schemas import MASTER_SCHEMAS
         from pyiceberg.exceptions import NoSuchTableError
         
-        schema = MASTER_SCHEMAS["pend"]
-        table_location = f"{base_location}/pend"
+        schema = MASTER_SCHEMAS["pml"]
+        table_location = f"{base_location}/pml"
         
         # Ensure table exists - create if needed
         try:
@@ -128,7 +120,6 @@ def consolidate_cenace_pend(
         schema_pa = combined_pa.schema
         fields = []
         for field in schema_pa:
-            # Check if required in Iceberg schema
             iceberg_field = next((f for f in schema.fields if f.name == field.name), None)
             if iceberg_field and iceberg_field.required:
                 fields.append(pa.field(field.name, field.type, nullable=False))
@@ -142,11 +133,13 @@ def consolidate_cenace_pend(
         
         logger.info("Successfully appended data to the Iceberg table.")
         
-        publish_table_metadata("pend", table_location)
+        # Update catalogs with the latest metadata pointer
+        publish_table_metadata("pml", table_location)
 
         return {"rows_appended": len(combined_df)}
 
     except Exception as e:
-        logger.error("Failed during PEND consolidation and Iceberg append", exc_info=e)
+        logger.error("Failed during PML consolidation and Iceberg append", exc_info=e)
         raise
+
 

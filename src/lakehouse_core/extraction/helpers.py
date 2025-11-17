@@ -8,8 +8,8 @@ from typing import Dict, List, Optional, Tuple, Union
 import pandas as pd
 import structlog
 
-from pipeline_tasks.config import load_config
-from pipeline_tasks.io.iceberg import load_table_by_name
+from lakehouse_core.config import load_config
+from lakehouse_core.io.iceberg import load_table_by_name
 
 logger = structlog.get_logger()
 
@@ -42,8 +42,8 @@ def resolve_catalog_path(catalog_path: str) -> Path:
     if catalog_file.exists():
         return catalog_file.resolve()
     
-    # Try relative to project root (where this file is: src/pipeline_tasks/extraction/)
-    # Project root is 3 levels up: src/pipeline_tasks/extraction -> src -> project root
+    # Try relative to project root (where this file is: src/lakehouse_core/extraction/)
+    # Project root is 3 levels up: src/lakehouse_core/extraction -> src -> project root
     project_root = Path(__file__).parent.parent.parent
     project_catalog = project_root / catalog_path
     

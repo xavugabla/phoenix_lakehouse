@@ -21,7 +21,7 @@ SRC_ROOT = Path(__file__).resolve().parent.parent.parent / "src"
 if str(SRC_ROOT) not in os.sys.path:
     os.sys.path.insert(0, str(SRC_ROOT))
 
-from pipeline_tasks.config import PipelineConfig, load_config
+from lakehouse_core.config import PipelineConfig, load_config
 
 logger = structlog.get_logger()
 

@@ -22,7 +22,7 @@ except ImportError:
     print("FastAPI not installed. Install with: pip install fastapi uvicorn")
     sys.exit(1)
 
-from pipeline_tasks.io.iceberg import load_table_by_name
+from lakehouse_core.io.iceberg import load_table_by_name
 import pandas as pd
 
 app = FastAPI(title="Iceberg Data API", version="1.0.0")
@@ -62,7 +62,7 @@ async def root():
 @app.get("/api/tables")
 async def list_tables():
     """List all available tables."""
-    from pipeline_tasks.io.iceberg_catalog import load_catalog
+    from lakehouse_core.io.iceberg_catalog import load_catalog
     
     catalog = load_catalog()
     return {

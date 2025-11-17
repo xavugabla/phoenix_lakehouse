@@ -18,7 +18,7 @@ except ImportError:
     print("DuckDB not installed. Install with: pip install duckdb duckdb-iceberg")
     sys.exit(1)
 
-from pipeline_tasks.io.iceberg_catalog import get_table_path
+from lakehouse_core.io.iceberg_catalog import get_table_path
 
 
 def example_duckdb_query():

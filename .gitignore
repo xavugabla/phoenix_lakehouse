@@ -1,0 +1,39 @@
+.venv/
+.env
+.env.*
+.mypy_cache/
+.pytest_cache/
+__pycache__/
+
+# IDE settings
+.idea/
+.vscode/
+
+# Python build outputs
+*.py[cod]
+*.log
+build/
+dist/
+*.egg-info/
+
+# Local data + manifests
+data/
+logs/
+data/manifests/
+*.manifest.json
+
+# Credentials & secrets
+*.key.json
+*.serviceaccount.json
+*.secrets.json
+credentials/
+connections.env
+
+# Prefect runtime/cache
+.prefect/
+workflows/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+

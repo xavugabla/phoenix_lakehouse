@@ -12,8 +12,8 @@ src_path = Path(__file__).resolve().parent.parent / "src"
 if str(src_path) not in sys.path:
     sys.path.insert(0, str(src_path))
 
-from pipeline_tasks.io.iceberg import load_table_by_name, load_table_from_gcs_path
-from pipeline_tasks.io.iceberg_catalog import get_table_path, find_latest_metadata_location
+from lakehouse_core.io.iceberg import load_table_by_name, load_table_from_gcs_path
+from lakehouse_core.io.iceberg_catalog import get_table_path, find_latest_metadata_location
 import pandas as pd
 
 

@@ -3,8 +3,8 @@ from prefect import task
 import structlog
 import pandas as pd
 
-from pipeline_tasks.io.iceberg import load_table_by_name
-from pipeline_tasks.config import load_config
+from lakehouse_core.io.iceberg import load_table_by_name
+from lakehouse_core.config import load_config
 from pyiceberg.exceptions import NoSuchTableError
 
 logger = structlog.get_logger()

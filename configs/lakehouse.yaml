@@ -1,0 +1,47 @@
+version: 1
+
+lakehouse:
+  gcs_bucket: "lakehouse_phoenix"
+  gcs_prefix: ""
+  catalog_type: "bigquery"
+  catalog_file: "catalogues/iceberg_catalog.json"
+
+  catalog:
+    name: "main"
+    project: "novagrid-476915"
+    dataset: "novagrid_dataset"
+
+  namespaces:
+    raw: "raw"
+    bronze: "bronze"
+    silver: "silver"
+    gold: "gold"
+
+  paths:
+    raw_zone: "raw"
+    bronze_zone: "bronze"
+    silver_zone: "silver"
+    gold_zone: "gold"
+    manifests: "data/manifests"
+
+  tables:
+    energy_prices:
+      bronze: "bronze.energy_prices"
+      silver: "silver.energy_prices"
+      gold: "gold.price_features"
+      partitions: ["system", "market", "region", "timestamp"]
+    weather_observations:
+      bronze: "bronze.weather_observations"
+      silver: "silver.weather_observations"
+      partitions: ["station_id", "timestamp"]
+    node_metadata:
+      silver: "silver.node_metadata"
+      gold: "gold.node_features"
+      partitions: ["region"]
+    revenue_features:
+      gold: "gold.revenue_features"
+      partitions: ["region", "timestamp"]
+    simulation_results:
+      gold: "gold.revenue_simulations"
+      partitions: ["scenario_id", "timestamp"]
+

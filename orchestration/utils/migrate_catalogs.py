@@ -14,16 +14,16 @@ if sys.platform == 'win32':
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
-# Add 'src' to the Python path to find pipeline_tasks
+# Add 'src' to the Python path to find lakehouse_core
 src_path = Path(__file__).resolve().parent.parent.parent / "src"
 if str(src_path) not in sys.path:
     sys.path.insert(0, str(src_path))
 
 from pyiceberg.exceptions import TableAlreadyExistsError
-from pipeline_tasks.config import load_config
-from pipeline_tasks.io.catalog_sync import publish_table_metadata
-from pipeline_tasks.io.iceberg import load_iceberg_catalog
-from pipeline_tasks.schemas.master_schemas import MASTER_SCHEMAS
+from lakehouse_core.config import load_config
+from lakehouse_core.io.catalog_sync import publish_table_metadata
+from lakehouse_core.io.iceberg import load_iceberg_catalog
+from lakehouse_core.schemas.master_schemas import MASTER_SCHEMAS
 
 def create_table_if_not_exists(catalog, table_identifier, schema, location):
     """Helper to create an Iceberg table safely."""

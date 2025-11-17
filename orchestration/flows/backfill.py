@@ -10,20 +10,20 @@ from typing import Optional
 from prefect import flow, task
 import structlog
 
-from pipeline_tasks.extraction import cenace_pml, cenace_pend, cenace_psc
-from pipeline_tasks.transform import (
+from lakehouse_core.extraction import cenace_pml, cenace_pend, cenace_psc
+from lakehouse_core.transform import (
     cenace_pml as transform_pml, 
     cenace_pend as transform_pend, 
     cenace_psc as transform_psc
 )
-from pipeline_tasks.consolidate import (
+from lakehouse_core.consolidate import (
     cenace_pend as consolidate_pend, 
     cenace_psc as consolidate_psc, 
     cenace_pml as consolidate_pml
 )
-from pipeline_tasks.extraction.helpers import chunk_date_range
-from pipeline_tasks.utils.git_pull import pull_latest_code
-from pipeline_tasks.config import load_config
+from lakehouse_core.extraction.helpers import chunk_date_range
+from lakehouse_core.utils.git_pull import pull_latest_code
+from lakehouse_core.config import load_config
 from orchestration.tasks.iceberg_tasks import get_latest_iceberg_timestamp
 
 logger = structlog.get_logger()

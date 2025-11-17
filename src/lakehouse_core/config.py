@@ -6,6 +6,7 @@ Uses Pydantic models to validate dataset configurations.
 import os
 from pathlib import Path
 from typing import Dict, Any, Optional, List
+
 import yaml
 from pydantic import BaseModel, Field, field_validator
 
@@ -16,13 +17,37 @@ class LakehouseCatalogConfig(BaseModel):
     project: str
     dataset: str
 
+class LakehousePaths(BaseModel):
+    """Named prefixes within the lakehouse bucket."""
+
+    raw_zone: str = "raw"
+    bronze_zone: str = "bronze"
+    silver_zone: str = "silver"
+    gold_zone: str = "gold"
+    manifests: str = "data/manifests"
+
+
+class TableContract(BaseModel):
+    """Declarative mapping for a logical table across zones."""
+
+    bronze: Optional[str] = None
+    silver: Optional[str] = None
+    gold: Optional[str] = None
+    partitions: List[str] = Field(default_factory=list)
+    description: Optional[str] = None
+
+
 class LakehouseConfig(BaseModel):
     """Configuration for the Data Lakehouse."""
+
     gcs_bucket: str
     gcs_prefix: str
     catalog_type: str = "file"  # "file" or "bigquery"
     catalog_file: str = "catalogues/iceberg_catalog.json"  # For file-based catalog
     catalog: Optional[LakehouseCatalogConfig] = None  # Optional, only for BigQuery catalog
+    namespaces: Dict[str, str] = Field(default_factory=dict)
+    paths: Optional[LakehousePaths] = None
+    tables: Dict[str, TableContract] = Field(default_factory=dict)
 
 
 class RetryConfig(BaseModel):
@@ -156,6 +181,28 @@ class ConfigError(Exception):
     pass
 
 
+def _load_lakehouse_settings() -> Optional[Dict[str, Any]]:
+    """
+    Load the dedicated lakehouse settings file if it exists.
+    """
+    candidate_paths = [
+        Path("configs/lakehouse.yaml"),
+        Path(__file__).resolve().parent.parent.parent / "configs" / "lakehouse.yaml",
+    ]
+
+    for candidate in candidate_paths:
+        if candidate.exists():
+            try:
+                with open(candidate, "r", encoding="utf-8") as handle:
+                    data = yaml.safe_load(handle) or {}
+                return data.get("lakehouse", data)
+            except yaml.YAMLError as exc:
+                raise ConfigError(f"Failed to parse lakehouse settings: {exc}") from exc
+            except Exception as exc:
+                raise ConfigError(f"Failed to read lakehouse settings: {exc}") from exc
+    return None
+
+
 def load_config(config_path: Optional[str] = None) -> PipelineConfig:
     """
     Load configuration from YAML file.
@@ -220,6 +267,11 @@ def load_config(config_path: Optional[str] = None) -> PipelineConfig:
     if 'monitoring' in config_dict:
         config_dict['monitoring'] = MonitoringConfig(**config_dict['monitoring'])
     
+    # Prefer dedicated lakehouse.yaml overrides if present
+    lakehouse_override = _load_lakehouse_settings()
+    if lakehouse_override:
+        config_dict['lakehouse'] = lakehouse_override
+
     if 'lakehouse' in config_dict:
         config_dict['lakehouse'] = LakehouseConfig(**config_dict['lakehouse'])
         

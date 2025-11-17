@@ -8,9 +8,9 @@ import pandas as pd
 from prefect import task
 import structlog
 
-from pipeline_tasks.config import load_config
-from pipeline_tasks.io.local import read_parquet
-from pipeline_tasks.io.catalog_sync import publish_table_metadata
+from lakehouse_core.config import load_config
+from lakehouse_core.io.local import read_parquet
+from lakehouse_core.io.catalog_sync import publish_table_metadata
 from pyiceberg.catalog import load_catalog
 import pyarrow as pa
 
@@ -84,7 +84,7 @@ def consolidate_cenace_psc(
             pass
         
         # Create table if it doesn't exist
-        from pipeline_tasks.schemas.master_schemas import MASTER_SCHEMAS
+        from lakehouse_core.schemas.master_schemas import MASTER_SCHEMAS
         from pyiceberg.exceptions import NoSuchTableError
         
         schema = MASTER_SCHEMAS["psc"]
