@@ -1,179 +1,27 @@
 """
-Configuration loading and validation for pipeline tasks.
+Configuration loading and validation for the lakehouse platform.
 
-Uses Pydantic models to validate dataset configurations.
+This module provides the core configuration models and loading functions
+for GCS storage layout, Iceberg catalog, and table contracts.
+
+Table contracts can be defined in:
+1. configs/lakehouse.yaml (tables: {})
+2. configs/tables/*.yaml (modular per-domain files)
 """
-import os
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Dict, Optional
 
 import yaml
-from pydantic import BaseModel, Field, field_validator
-
-
-class LakehouseCatalogConfig(BaseModel):
-    """Configuration for the Iceberg Catalog (BigQuery)."""
-    name: str
-    project: str
-    dataset: str
-
-class LakehousePaths(BaseModel):
-    """Named prefixes within the lakehouse bucket."""
-
-    raw_zone: str = "raw"
-    bronze_zone: str = "bronze"
-    silver_zone: str = "silver"
-    gold_zone: str = "gold"
-    manifests: str = "data/manifests"
-
-
-class TableContract(BaseModel):
-    """Declarative mapping for a logical table across zones."""
-
-    bronze: Optional[str] = None
-    silver: Optional[str] = None
-    gold: Optional[str] = None
-    partitions: List[str] = Field(default_factory=list)
-    description: Optional[str] = None
+from pydantic import BaseModel, Field
 
 
 class LakehouseConfig(BaseModel):
-    """Configuration for the Data Lakehouse."""
-
-    gcs_bucket: str
-    gcs_prefix: str
-    catalog_type: str = "file"  # "file" or "bigquery"
-    catalog_file: str = "catalogues/iceberg_catalog.json"  # For file-based catalog
-    catalog: Optional[LakehouseCatalogConfig] = None  # Optional, only for BigQuery catalog
-    namespaces: Dict[str, str] = Field(default_factory=dict)
-    paths: Optional[LakehousePaths] = None
-    tables: Dict[str, TableContract] = Field(default_factory=dict)
-
-
-class RetryConfig(BaseModel):
-    """Retry configuration."""
-    total: int = 5
-    backoff: float = 0.5
-    max_delay: int = 60
-
-
-class StorageConfig(BaseModel):
-    """Storage configuration."""
-    bucket: str = "novogrid-workqueue"
-    prefix: str = "data/cenace"
-    enable_versioning: bool = False
-    checksum_algorithm: str = "md5"
-
-
-class LocalStorageConfig(BaseModel):
-    """Local storage configuration."""
-    base_path: str = "data/local"
-    prefer_consolidated: bool = True
-
-
-class DatasetConfig(BaseModel):
-    """Configuration for a single dataset."""
-    description: str
-    api_path: str
-    markets: List[str] = Field(default_factory=lambda: ["MDA", "MTR"])
-    regions: List[str] = Field(default_factory=lambda: ["SIN", "BCA", "BCS"])
-    
-    # API constraints
-    max_nodes_per_request: Optional[int] = None
-    max_zones_per_request: Optional[int] = None
-    max_days_per_request: int = 7
-    
-    # Data structure
-    raw_format: str = "json"
-    partition_keys: List[str] = Field(default_factory=list)
-    
-    # Catalog reference
-    catalog_file: Optional[str] = None
-    catalog_key: Optional[str] = None
-    
-    # Transformation
-    schema_version: str
-    required_fields: List[str] = Field(default_factory=list)
-    
-    @field_validator('markets', 'regions', 'partition_keys', 'required_fields')
-    @classmethod
-    def validate_list_not_empty(cls, v):
-        if isinstance(v, list) and len(v) == 0:
-            raise ValueError("List cannot be empty")
-        return v
-
-
-class ConsolidationConfig(BaseModel):
-    """Consolidation configuration."""
-    partition_by: List[str] = Field(default_factory=lambda: ["market", "region", "zone"])
-    time_partition: str = "year"  # year, month, or all
-    compression: str = "snappy"
-    row_group_size: int = 128 * 1024 * 1024  # 128MB
-    deduplicate: bool = True
-    sort_by: List[str] = Field(default_factory=lambda: ["timestamp"])
-
-
-class CatalogConfig(BaseModel):
-    """Catalog enrichment configuration."""
-    base_path: str = "catalogues/cenace_catalogues"
-    output_format: List[str] = Field(default_factory=lambda: ["json", "parquet"])
-    partition_by: List[str] = Field(default_factory=lambda: ["region"])
-    incremental: bool = True
-
-
-class MonitoringConfig(BaseModel):
-    """Monitoring configuration."""
-    min_rows_per_partition: int = 1
-    max_missing_days: int = 7
-    alert_on_failure: bool = True
-    alert_on_stale_data: bool = True
-    stale_threshold_days: int = 2
-
-
-class PipelineConfig(BaseModel):
-    """Complete pipeline configuration."""
-    # Base paths
-    raw_root: str = "data/raw"
-    staged_root: str = "data/staged"
-    consolidated_root: str = "data/consolidated"
-    local_root: str = "data/local"
-    
-    # API settings
-    api_base_url: str = "https://ws01.cenace.gob.mx:8082"
-    user_agent: str = "CENACE-Data-Collector/1.0"
-    verify_ssl: bool = False
-    timeout: int = 60
-    
-    # Retry settings
-    retries: RetryConfig = Field(default_factory=RetryConfig)
-    
-    # Rate limiting
-    rate_limit_delay: float = 3.0
-    
-    # Storage
-    gcs_bucket: str = "novogrid-workqueue"
-    gcs_prefix: str = "data/cenace"
-    
-    # Partitioning
-    partition_format: str = "hive"
-    
-    # Dataset configurations
-    datasets: Dict[str, DatasetConfig] = Field(default_factory=dict)
-    
-    # Storage configuration
-    storage: Dict[str, Any] = Field(default_factory=dict)
-    
-    # Consolidation configuration
-    consolidation: ConsolidationConfig = Field(default_factory=ConsolidationConfig)
-    
-    # Catalog configuration
-    catalog: CatalogConfig = Field(default_factory=CatalogConfig)
-    
-    # Monitoring configuration
-    monitoring: MonitoringConfig = Field(default_factory=MonitoringConfig)
-
-    # Lakehouse configuration
-    lakehouse: Optional[LakehouseConfig] = None
+    """Configuration for the Data Lakehouse platform."""
+    bucket: str
+    prefix: str = ""
+    zones: Dict[str, str] = Field(default_factory=dict)
+    catalog: Dict[str, str] = Field(default_factory=dict)
+    tables: Dict[str, Dict[str, str]] = Field(default_factory=dict)
 
 
 class ConfigError(Exception):
@@ -181,52 +29,84 @@ class ConfigError(Exception):
     pass
 
 
-def _load_lakehouse_settings() -> Optional[Dict[str, Any]]:
-    """
-    Load the dedicated lakehouse settings file if it exists.
-    """
-    candidate_paths = [
-        Path("configs/lakehouse.yaml"),
-        Path(__file__).resolve().parent.parent.parent / "configs" / "lakehouse.yaml",
-    ]
-
-    for candidate in candidate_paths:
-        if candidate.exists():
-            try:
-                with open(candidate, "r", encoding="utf-8") as handle:
-                    data = yaml.safe_load(handle) or {}
-                return data.get("lakehouse", data)
-            except yaml.YAMLError as exc:
-                raise ConfigError(f"Failed to parse lakehouse settings: {exc}") from exc
-            except Exception as exc:
-                raise ConfigError(f"Failed to read lakehouse settings: {exc}") from exc
-    return None
+_config: Optional[LakehouseConfig] = None
 
 
-def load_config(config_path: Optional[str] = None) -> PipelineConfig:
+def _load_table_contracts(config_dir: Path) -> Dict[str, Dict[str, str]]:
     """
-    Load configuration from YAML file.
+    Load table contracts from modular YAML files.
+    
+    Looks for files in configs/tables/*.yaml and merges them.
+    Each file should contain a 'tables' dict with table contracts.
     
     Args:
-        config_path: Path to config file (default: configs/datasets.yaml)
+        config_dir: Directory containing config files
     
     Returns:
-        PipelineConfig instance
+        Merged dictionary of all table contracts
+    """
+    tables_dir = config_dir / "tables"
+    all_tables = {}
+    
+    if not tables_dir.exists():
+        return all_tables
+    
+    # Load all YAML files in configs/tables/
+    for table_file in tables_dir.glob("*.yaml"):
+        try:
+            with open(table_file, 'r', encoding='utf-8') as f:
+                table_config = yaml.safe_load(f) or {}
+            
+            # Extract tables from file (supports both formats)
+            file_tables = table_config.get('tables', table_config)
+            
+            if isinstance(file_tables, dict):
+                # Merge into all_tables, warn on conflicts
+                for table_name, contract in file_tables.items():
+                    if table_name in all_tables:
+                        raise ConfigError(
+                            f"Duplicate table contract '{table_name}' found in {table_file.name}. "
+                            f"Table contracts must be unique across all files."
+                        )
+                    all_tables[table_name] = contract
+        except yaml.YAMLError as e:
+            raise ConfigError(f"Failed to parse table config {table_file}: {e}")
+        except Exception as e:
+            raise ConfigError(f"Failed to load table config {table_file}: {e}")
+    
+    return all_tables
+
+
+def get_lakehouse_config(config_path: Optional[str] = None) -> LakehouseConfig:
+    """
+    Get the lakehouse configuration (cached after first load).
+    
+    Loads configuration from:
+    1. Main config file (configs/lakehouse.yaml)
+    2. Modular table contracts (configs/tables/*.yaml)
+    
+    Args:
+        config_path: Path to main config file (default: configs/lakehouse.yaml)
+    
+    Returns:
+        LakehouseConfig instance
     
     Raises:
         ConfigError: If config file not found or invalid
     """
+    global _config
+    
+    if _config is not None:
+        return _config
+    
     if config_path is None:
-        # Try default locations
         candidates = [
-            'configs/datasets.yaml',
-            'configs/datasets.yml',
-            Path(__file__).parent.parent.parent / 'configs' / 'datasets.yaml',
+            Path("configs/lakehouse.yaml"),
+            Path(__file__).resolve().parent.parent.parent / "configs" / "lakehouse.yaml",
         ]
         for candidate in candidates:
-            candidate_path = Path(candidate) if not isinstance(candidate, Path) else candidate
-            if candidate_path.exists():
-                config_path = str(candidate_path)
+            if candidate.exists():
+                config_path = str(candidate)
                 break
         
         if config_path is None:
@@ -238,7 +118,10 @@ def load_config(config_path: Optional[str] = None) -> PipelineConfig:
     if not config_file.exists():
         raise ConfigError(f"Config file not found: {config_path}")
     
+    config_dir = config_file.parent
+    
     try:
+        # Load main config
         with open(config_file, 'r', encoding='utf-8') as f:
             config_dict = yaml.safe_load(f) or {}
     except yaml.YAMLError as e:
@@ -246,62 +129,18 @@ def load_config(config_path: Optional[str] = None) -> PipelineConfig:
     except Exception as e:
         raise ConfigError(f"Failed to read config file: {e}")
     
-    # Extract defaults and merge with dataset configs
-    defaults = config_dict.get('defaults', {})
-    datasets_raw = config_dict.get('datasets', {})
+    # Load modular table contracts
+    modular_tables = _load_table_contracts(config_dir)
     
-    # Merge defaults into each dataset config
-    datasets = {}
-    for dataset_id, dataset_raw in datasets_raw.items():
-        merged = {**defaults, **dataset_raw}
-        datasets[dataset_id] = DatasetConfig(**merged)
+    # Merge tables: main config tables + modular tables
+    # Main config takes precedence if there are conflicts
+    main_tables = config_dict.get('tables', {})
+    all_tables = {**modular_tables, **main_tables}  # Main config overrides modular
     
-    # Build complete config
-    config_dict['datasets'] = datasets
+    config_dict['tables'] = all_tables
     
-    # Parse nested configs
-    if 'consolidation' in config_dict:
-        config_dict['consolidation'] = ConsolidationConfig(**config_dict['consolidation'])
-    if 'catalog' in config_dict:
-        config_dict['catalog'] = CatalogConfig(**config_dict['catalog'])
-    if 'monitoring' in config_dict:
-        config_dict['monitoring'] = MonitoringConfig(**config_dict['monitoring'])
-    
-    # Prefer dedicated lakehouse.yaml overrides if present
-    lakehouse_override = _load_lakehouse_settings()
-    if lakehouse_override:
-        config_dict['lakehouse'] = lakehouse_override
-
-    if 'lakehouse' in config_dict:
-        config_dict['lakehouse'] = LakehouseConfig(**config_dict['lakehouse'])
-        
     try:
-        return PipelineConfig(**config_dict)
+        _config = LakehouseConfig(**config_dict)
+        return _config
     except Exception as e:
-        raise ConfigError(f"Failed to validate config: {e}")
-
-
-def get_dataset_config(config: PipelineConfig, dataset_id: str) -> DatasetConfig:
-    """
-    Get configuration for a specific dataset.
-    
-    Args:
-        config: Pipeline configuration
-        dataset_id: Dataset identifier
-    
-    Returns:
-        Dataset configuration
-    
-    Raises:
-        ConfigError: If dataset not found
-    """
-    if dataset_id not in config.datasets:
-        available = list(config.datasets.keys())
-        raise ConfigError(
-            f"Dataset '{dataset_id}' not found in config. "
-            f"Available: {', '.join(available[:10])}"
-            + (f" and {len(available) - 10} more" if len(available) > 10 else "")
-        )
-    
-    return config.datasets[dataset_id]
-
+        raise ConfigError(f"Failed to validate lakehouse config: {e}")

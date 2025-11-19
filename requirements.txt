@@ -1,37 +1,8 @@
-# ============================================================================
-# Lakehouse Core - Python Dependencies
-# ============================================================================
-# Install with: pip install -r requirements.txt
-# For development: pip install -r requirements.txt -r requirements-dev.txt
-# ============================================================================
+# Lakehouse Core - Runtime Dependencies
+# Generated from pyproject.toml
 
-# ============================================================================
-# CORE RUNTIME
-# ============================================================================
-
-prefect>=2.14.0                         # Orchestration for audits / migrations
-pandas>=2.0.0,<3.0.0                    # DataFrame utilities for IO + examples
-pyarrow>=14.0.0                         # Parquet + Arrow conversions
-PyYAML>=6.0                             # Config parsing
-structlog>=23.1.0                       # Structured logging
-pydantic>=2.0.0                         # Typed settings + manifests
-pyiceberg[gcp,pandas,pyarrow]>=0.5.0    # Iceberg interactions
-
-
-# ============================================================================
-# CLOUD STORAGE & CATALOGS
-# ============================================================================
-
-google-cloud-storage>=2.10.0            # GCS data + metadata access
-google-cloud-bigquery>=3.11.0           # BigQuery-backed catalog registration
-google-auth>=2.23.0                     # Credential helpers for GCP clients
-
-
-# ============================================================================
-# ANALYTICS & CLIENT EXAMPLES
-# ============================================================================
-
-duckdb>=0.9.2                           # Local analytics + validation scripts
-fastapi>=0.103.0                        # Reference web API
-uvicorn>=0.23.0                         # Local server for the FastAPI example
-
+PyYAML>=6.0
+google-cloud-storage>=2.10.0
+google-auth>=2.23.0
+pydantic>=2.0.0
+pyiceberg[gcp]>=0.5.0
