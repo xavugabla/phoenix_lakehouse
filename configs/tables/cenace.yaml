@@ -1,20 +1,62 @@
 # CENACE Energy Data Table Contracts
 # This file defines table contracts for CENACE datasets (PEND, PML, PSC)
 
+# CENACE Energy Data – RAW Zone Table Contracts
+# These are the 6 raw datasets you extract with Prefect.
+# Keep it extremely simple at this stage.
+
 tables:
-  bronze.pend:
+  raw.pend_mda:
     domain: "cenace"
-    zone: "bronze"
-    schema: "pend_bronze"
-    partition_by: ["market", "region", "zone", "year"]
-    description: "Energy prices by load zone (Precios de Energía en Nodos Distribuidos)"
+    zone: "raw"
+    partition_by: ["ingestion_date"]
+    description: "Raw PEND MDA data"
+
+  raw.pend_mtr:
+    domain: "cenace"
+    zone: "raw"
+    partition_by: ["ingestion_date"]
+    description: "Raw PEND MTR data"
+
+  raw.pml_mda:
+    domain: "cenace"
+    zone: "raw"
+    partition_by: ["ingestion_date"]
+    description: "Raw PML MDA data"
+
+  raw.pml_mtr:
+    domain: "cenace"
+    zone: "raw"
+    partition_by: ["ingestion_date"]
+    description: "Raw PML MTR data"
+
+  raw.psc_mda:
+    domain: "cenace"
+    zone: "raw"
+    partition_by: ["ingestion_date"]
+    description: "Raw PSC MDA data"
+
+  raw.psc_mtr:
+    domain: "cenace"
+    zone: "raw"
+    partition_by: ["ingestion_date"]
+    description: "Raw PSC MTR data"
+
+
+# tables:
+#  bronze.pend:
+#    domain: "cenace"
+#    zone: "bronze"
+#    schema: "pend_bronze"
+#    partition_by: ["market", "region", "zone", "year"]
+#    description: "Energy prices by load zone (Precios de Energía en Nodos Distribuidos)"
   
-  bronze.pml:
-    domain: "cenace"
-    zone: "bronze"
-    schema: "pml_bronze"
-    partition_by: ["market", "region", "node", "year"]
-    description: "Locational marginal prices by node (Precios Marginales Locales)"
+#  bronze.pml:
+#    domain: "cenace"
+#    zone: "bronze"
+#    schema: "pml_bronze"
+#    partition_by: ["market", "region", "node", "year"]
+#    description: "Locational marginal prices by node (Precios Marginales Locales)"
   
   # Future: Add PSC when ready
   # bronze.psc:
