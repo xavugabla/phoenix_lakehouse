@@ -43,20 +43,19 @@ tables:
     description: "Raw PSC MTR data"
 
 
-# tables:
-#  bronze.pend:
-#    domain: "cenace"
-#    zone: "bronze"
-#    schema: "pend_bronze"
-#    partition_by: ["market", "region", "zone", "year"]
-#    description: "Energy prices by load zone (Precios de Energía en Nodos Distribuidos)"
+  bronze.pend:
+    domain: "cenace"
+    zone: "bronze"
+    schema: "pend_bronze"
+    partition_by: ["market", "region", "zone", "year"]
+    description: "Energy prices by load zone (Precios de Energía en Nodos Distribuidos)"
   
-#  bronze.pml:
-#    domain: "cenace"
-#    zone: "bronze"
-#    schema: "pml_bronze"
-#    partition_by: ["market", "region", "node", "year"]
-#    description: "Locational marginal prices by node (Precios Marginales Locales)"
+  bronze.pml:
+    domain: "cenace"
+    zone: "bronze"
+    schema: "pml_bronze"
+    partition_by: ["market", "region", "node", "year"]
+    description: "Locational marginal prices by node (Precios Marginales Locales)"
   
   # Future: Add PSC when ready
   # bronze.psc:

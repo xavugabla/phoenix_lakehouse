@@ -4,7 +4,12 @@ Table contract helpers for the lakehouse platform.
 This module provides functions to access table identifiers and contracts.
 """
 from typing import Tuple, Optional
-from pyiceberg.table.identifier import Identifier
+try:
+    # PyIceberg >= 0.10.0: Identifier is a type alias in pyiceberg.table
+    from pyiceberg.table import Identifier
+except ImportError:
+    # PyIceberg < 0.10.0: Identifier was in pyiceberg.table.identifier
+    from pyiceberg.table.identifier import Identifier
 
 from .config import get_lakehouse_config, LakehouseConfig
 

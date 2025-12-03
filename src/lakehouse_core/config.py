@@ -9,7 +9,7 @@ Table contracts can be defined in:
 2. configs/tables/*.yaml (modular per-domain files)
 """
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 import yaml
 from pydantic import BaseModel, Field
@@ -21,7 +21,7 @@ class LakehouseConfig(BaseModel):
     prefix: str = ""
     zones: Dict[str, str] = Field(default_factory=dict)
     catalog: Dict[str, str] = Field(default_factory=dict)
-    tables: Dict[str, Dict[str, str]] = Field(default_factory=dict)
+    tables: Dict[str, Dict[str, Any]] = Field(default_factory=dict)  # Allow Any for partition_by lists
 
 
 class ConfigError(Exception):
