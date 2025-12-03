@@ -3,7 +3,7 @@ Lakehouse Core - Platform definitions for Iceberg + GCS lakehouse.
 
 This package provides:
 - GCS storage layout definitions (raw/bronze/silver/gold zones)
-- Iceberg catalog configuration (unified file-based/Hadoop catalog on GCS)
+- Iceberg catalog configuration (SQL/SQLite catalog for metadata)
 - Table contracts: schemas, table names, namespaces, partitioning
 - Minimal Python API for consuming repositories
 
@@ -41,7 +41,12 @@ from . import schemas
 # Expose main API functions
 from .config import get_lakehouse_config
 from .catalogs import get_iceberg_catalog
-from .tables import get_table_identifier
+from .tables import (
+    get_table_identifier,
+    get_table_contract,
+    create_partition_spec,
+    create_bronze_table,
+)
 
 __all__ = [
     "config",
@@ -52,5 +57,8 @@ __all__ = [
     "get_lakehouse_config",
     "get_iceberg_catalog",
     "get_table_identifier",
+    "get_table_contract",
+    "create_partition_spec",
+    "create_bronze_table",
     "__version__",
 ]

@@ -1,10 +1,10 @@
 # Iceberg Catalog Setup
 
-This guide explains how the file-based/Hadoop-style Iceberg catalog works on GCS.
+This guide explains how the SQL-based Iceberg catalog works with SQLite and GCS.
 
 ## Catalog Architecture
 
-The catalog uses a **file-based/Hadoop-style** catalog stored directly in GCS. All Iceberg table metadata (snapshots, schemas, manifests) is stored under the warehouse path.
+The catalog uses a **SQL catalog (SQLite)** for storing Iceberg table metadata (table names, schemas, etc.). The actual table data (Parquet files, manifests, snapshots) is stored in GCS under the warehouse path.
 
 ## Configuration
 
@@ -12,14 +12,17 @@ Edit `configs/lakehouse.yaml`:
 
 ```yaml
 catalog:
-  type: "hadoop"
-  warehouse: "gs://lakehouse_phoenix/iceberg/"
+  type: "sql"
+  uri: "sqlite:///iceberg_catalog.db"  # SQLite database path
+  warehouse: "gs://lakehouse_phoenix/iceberg/"  # GCS path for table data
 ```
 
-The warehouse path:
-- Must be a GCS path (`gs://bucket/path/`)
-- Must end with `/`
-- Will contain all Iceberg catalog metadata
+Configuration options:
+- **uri**: SQLite database URI (e.g., `sqlite:///iceberg_catalog.db` for relative path, or `sqlite:////absolute/path/to/db.db` for absolute path)
+- **warehouse**: GCS path where table data is stored
+  - Must be a GCS path (`gs://bucket/path/`)
+  - Must end with `/`
+  - Contains Iceberg table data (Parquet files, metadata files)
 
 ## How It Works
 
@@ -31,11 +34,15 @@ The warehouse path:
    ```
 
 2. **Table Creation:**
-   When you create a table, the catalog stores metadata in GCS:
+   When you create a table:
+   - Catalog metadata (table name, schema reference) is stored in SQLite database
+   - Table data (Parquet files, manifests, snapshots) is stored in GCS:
    ```
    gs://lakehouse_phoenix/iceberg/
      {namespace}/
        {table_name}/
+         data/
+           *.parquet
          metadata/
            v1.metadata.json
            v2.metadata.json
@@ -71,10 +78,23 @@ namespaces = catalog.list_namespaces()
 print(f"Namespaces: {namespaces}")
 ```
 
+## SQLite Database Location
+
+The SQLite database file stores catalog metadata. Choose a location that:
+- Is accessible to all processes that need to access the catalog
+- Can be backed up regularly
+- Is on persistent storage (not ephemeral/temporary)
+
+Common locations:
+- **Local development**: `sqlite:///iceberg_catalog.db` (project root)
+- **VM/Server**: `sqlite:////var/lib/iceberg/catalog.db` (absolute path)
+- **Shared storage**: `sqlite:////mnt/shared/iceberg_catalog.db` (if using shared filesystem)
+
 ## Notes
 
 - **No BigQuery:** BigQuery is not used as an Iceberg catalog in this repo
-- **No Sync:** There's no catalog synchronization - metadata lives directly in GCS
-- **Portable:** The file-based catalog is portable and doesn't require external services
-- **Simple:** All metadata is stored in a predictable GCS structure
+- **SQLite Metadata:** Catalog metadata (table names, schemas) is stored in SQLite
+- **GCS Data:** Table data (Parquet files, manifests) is stored in GCS warehouse
+- **Portable:** SQLite database can be easily backed up and moved
+- **Simple:** No external catalog service required - just SQLite and GCS
 

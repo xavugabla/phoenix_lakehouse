@@ -11,8 +11,9 @@ zones:
   gold: "gold"
 
 catalog:
-  type: "hadoop"
-  warehouse: "gs://lakehouse_phoenix/iceberg/"
+  type: "sql"
+  uri: "sqlite:///iceberg_catalog.db"  # SQLite database path (can be absolute or relative)
+  warehouse: "gs://lakehouse_phoenix/iceberg/"  # GCS path for table data storage
 
 # Table contracts can be defined here OR in modular files (configs/tables/*.yaml)
 # Modular files are recommended for better organization as domains grow

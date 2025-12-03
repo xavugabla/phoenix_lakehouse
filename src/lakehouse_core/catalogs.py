@@ -1,8 +1,9 @@
 """
 Iceberg catalog configuration and initialization.
 
-This module provides functions to obtain and configure the unified
-file-based Iceberg catalog (Hadoop-style) on GCS for table metadata management.
+This module provides functions to obtain and configure the Iceberg catalog
+(SQL-based with SQLite) for table metadata management. Table data is stored
+in GCS under the warehouse path.
 """
 import os
 from functools import lru_cache
@@ -16,11 +17,11 @@ from .config import get_lakehouse_config, LakehouseConfig
 @lru_cache(maxsize=1)
 def get_iceberg_catalog(config: Optional[LakehouseConfig] = None) -> Catalog:
     """
-    Get the configured Iceberg catalog (file-based/Hadoop-style on GCS).
+    Get the configured Iceberg catalog (SQL-based with SQLite).
     
-    This function initializes and returns the unified file-based catalog
-    for managing Iceberg table metadata. All metadata is stored in GCS
-    under the warehouse path.
+    This function initializes and returns the SQL catalog for managing
+    Iceberg table metadata. Catalog metadata is stored in SQLite, while
+    table data is stored in GCS under the warehouse path.
     
     Args:
         config: Optional lakehouse config (loads if not provided)
@@ -36,30 +37,40 @@ def get_iceberg_catalog(config: Optional[LakehouseConfig] = None) -> Catalog:
     if config is None:
         config = get_lakehouse_config()
 
-    catalog_type = config.catalog.get("type", "hadoop")
-    if catalog_type != "hadoop":
-        raise ValueError(
-            f"Catalog type must be 'hadoop' (file-based), got '{catalog_type}'. "
-            "This platform uses a file-based catalog on GCS as the single source of truth."
+    catalog_type = config.catalog.get("type", "sql")
+    
+    if catalog_type == "sql":
+        # SQL catalog (SQLite)
+        uri = config.catalog.get("uri")
+        if not uri:
+            raise ValueError(
+                "Catalog URI not configured. Please set catalog.uri "
+                "in configs/lakehouse.yaml (e.g., 'sqlite:///iceberg_catalog.db')"
+            )
+        
+        warehouse = config.catalog.get("warehouse")
+        if not warehouse:
+            raise ValueError(
+                "Catalog warehouse not configured. Please set catalog.warehouse "
+                "in configs/lakehouse.yaml (e.g., 'gs://lakehouse_phoenix/iceberg/')"
+            )
+        
+        # Ensure warehouse path ends with /
+        if not warehouse.endswith("/"):
+            warehouse = f"{warehouse}/"
+        
+        catalog = load_catalog(
+            "phoenix",
+            **{
+                "type": "sql",
+                "uri": uri,
+                "warehouse": warehouse,
+            }
         )
-
-    warehouse = config.catalog.get("warehouse")
-    if not warehouse:
+    else:
         raise ValueError(
-            "Catalog warehouse not configured. Please set catalog.warehouse "
-            "in configs/lakehouse.yaml (e.g., 'gs://lakehouse_phoenix/iceberg/')"
+            f"Unsupported catalog type '{catalog_type}'. "
+            "Supported types: 'sql' (SQLite)"
         )
-
-    # Ensure warehouse path ends with /
-    if not warehouse.endswith("/"):
-        warehouse = f"{warehouse}/"
-
-    catalog = load_catalog(
-        "phoenix",
-        **{
-            "type": "hadoop",
-            "warehouse": warehouse,
-        }
-    )
 
     return catalog

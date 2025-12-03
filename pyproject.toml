@@ -34,7 +34,7 @@ dependencies = [
     "google-cloud-storage>=2.10.0",
     "google-auth>=2.23.0",
     "pydantic>=2.0.0",
-    "pyiceberg[gcp]>=0.5.0",
+    "pyiceberg[gcp]>=0.10.0",  # SQL catalog support requires 0.10.0+
 ]
 
 [project.optional-dependencies]

@@ -6,14 +6,14 @@ A minimal platform library for Apache Iceberg + GCS lakehouse architecture.
 
 This repository provides the **contracts and definitions** for a shared lakehouse platform:
 - GCS storage layout definitions (raw/bronze/silver/gold zones)
-- Iceberg catalog configuration (unified file-based/Hadoop catalog on GCS)
+- Iceberg catalog configuration (SQL catalog with SQLite for metadata)
 - Table contracts: schemas, table names, namespaces, partitioning
 - Minimal Python package exposing these definitions
 
 ## What This Repo Does
 
 ✅ Defines where data lives in GCS (zone paths)  
-✅ Configures the unified Iceberg catalog (file-based on GCS)  
+✅ Configures the Iceberg catalog (SQL/SQLite for metadata)  
 ✅ Provides table contracts (names, zones, partitions)  
 ✅ Exposes a clean Python API for consuming repositories  
 
@@ -62,7 +62,7 @@ table_path = table_prefix("bronze.your_table_name")
 
 Edit `configs/lakehouse.yaml` to configure:
 - GCS bucket and prefix
-- Iceberg catalog (file-based/Hadoop, warehouse path)
+- Iceberg catalog (SQL/SQLite, URI and warehouse path)
 - Zone paths (raw/bronze/silver/gold)
 
 ### Table Contracts
@@ -88,7 +88,7 @@ The modular approach scales better as you add more domains.
 
 - **Storage**: GCS as the single data lake
 - **Table Format**: Apache Iceberg
-- **Catalog**: File-based/Hadoop-style catalog on GCS (warehouse: `gs://lakehouse_phoenix/iceberg/`)
+- **Catalog**: SQL catalog (SQLite) for metadata, GCS warehouse for table data (`gs://lakehouse_phoenix/iceberg/`)
 - **Zones**: raw (immutable), bronze (minimal), silver (cleaned), gold (features/metrics)
 
 This platform is domain-agnostic. Domain-specific schemas, datasets, and business logic belong in consuming repositories (data-pipeline, data-manager, revenue-models, etc.).
@@ -105,7 +105,7 @@ When adding a new dataset, follow the standards guide:
 
 See `docs/ADDING_NEW_DATASETS.md` for complete guide and standards checklist.
 
-**Note:** BigQuery is not used as an Iceberg catalog in this repo. BigQuery may be used as a compute engine (via BigLake/external tables) in consuming repositories, but the catalog is exclusively file-based on GCS.
+**Note:** BigQuery is not used as an Iceberg catalog in this repo. BigQuery may be used as a compute engine (via BigLake/external tables) in consuming repositories, but the catalog uses SQL (SQLite) for metadata storage.
 
 ## License
 
