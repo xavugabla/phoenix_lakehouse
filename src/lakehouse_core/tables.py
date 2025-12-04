@@ -104,7 +104,6 @@ def create_partition_spec(partition_keys: list, schema: Schema) -> PartitionSpec
 def create_bronze_table(
     table_name: str,
     schema: Schema,
-    config: Optional[LakehouseConfig] = None,
     overwrite: bool = False
 ):
     """
@@ -117,7 +116,6 @@ def create_bronze_table(
     Args:
         table_name: Full table identifier (e.g., "bronze.pend")
         schema: PyIceberg Schema instance for the table
-        config: Optional lakehouse config (loads if not provided)
         overwrite: If True, drop existing table before creating (default: False)
     
     Returns:
@@ -128,10 +126,11 @@ def create_bronze_table(
         ImportError: If required PyIceberg modules are not available
     """
     from .catalogs import get_iceberg_catalog
-    
-    if config is None:
-        config = get_lakehouse_config()
-    
+
+    # Load config inside the function to ensure caching works correctly
+    # The lru_cache on get_iceberg_catalog expects hashable arguments
+    config = get_lakehouse_config()
+
     # Get table contract
     contract = get_table_contract(table_name, config)
     if not contract:
@@ -146,7 +145,7 @@ def create_bronze_table(
         raise ValueError(f"Table contract 'partition_by' must be a list, got {type(partition_keys)}")
     
     # Get catalog and table identifier
-    catalog = get_iceberg_catalog(config)
+    catalog = get_iceberg_catalog() # Pass no arguments to leverage cache
     identifier = get_table_identifier(table_name, config)
     
     # Check if table exists
