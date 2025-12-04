@@ -57,11 +57,10 @@ tables:
     partition_by: ["market", "region", "node", "year"]
     description: "Locational marginal prices by node (Precios Marginales Locales)"
   
-  # Future: Add PSC when ready
-  # bronze.psc:
-  #   domain: "cenace"
-  #   zone: "bronze"
-  #   schema: "psc_bronze"
-  #   partition_by: ["market", "region", "zone", "year"]
-  #   description: "Ancillary services prices (Precios de Servicios Conexos)"
+  bronze.psc:
+    domain: "cenace"
+    zone: "bronze"
+    schema: "psc_bronze"
+    partition_by: ["market", "region", "zone", "year"]
+    description: "Ancillary services prices (Precios de Servicios Conexos)"
 
