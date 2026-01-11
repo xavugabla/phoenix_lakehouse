@@ -1,0 +1,56 @@
+# Dataset Contract: Node Master
+# Master data for electrical nodes in the system
+
+dataset_id: node_master
+version: "1.0.0"
+
+# Runtime parameters definition
+params:
+  - name: region
+    type: string
+    required: false
+    allowed_values: ["BCA", "BCS", "SIN", "SON", "NOR", "OCC", "CEN", "ORI", "PEN", "ALL"]
+    description: "Region filter (ALL for all regions)"
+  
+  - name: active_only
+    type: boolean
+    required: false
+    description: "Filter for active nodes only"
+
+# Expected schema (columns and types)
+schema:
+  columns:
+    - name: node_id
+      type: string
+    - name: node_name
+      type: string
+    - name: region
+      type: string
+    - name: zone
+      type: string
+    - name: voltage_level
+      type: double
+    - name: node_type
+      type: string
+    - name: is_active
+      type: boolean
+    - name: created_at
+      type: timestamp
+    - name: updated_at
+      type: timestamp
+
+# Partitioning strategy (ordered keys)
+partitioning:
+  keys: ["region"]
+
+# Storage path templates
+storage:
+  bronze: "bronze/master_data/nodes"
+  silver: "silver/master_data/nodes"
+  gold: "gold/master_data/nodes"
+
+# Source configuration
+source:
+  type: legacy_script
+  script_path: "scripts/legacy/extract_node_master.py"
+  description: "Legacy script for extracting node master data"
