@@ -1,6 +1,6 @@
 # Lakehouse Core
 
-A minimal platform library for Apache Iceberg + GCS lakehouse architecture.
+A minimal platform library for Apache Iceberg + GCS lakehouse architecture, now with contract-governed dataset execution.
 
 ## Purpose
 
@@ -8,13 +8,30 @@ This repository provides the **contracts and definitions** for a shared lakehous
 - GCS storage layout definitions (raw/bronze/silver/gold zones)
 - Iceberg catalog configuration (SQL catalog with SQLite for metadata)
 - Table contracts: schemas, table names, namespaces, partitioning
+- **Dataset governance framework (`contracts_core`)** for contract-based execution
 - Minimal Python package exposing these definitions
+
+## Packages
+
+### 1. `lakehouse_core` - Platform Definitions
+Defines storage layout, catalog configuration, and table contracts.
+
+### 2. `contracts_core` - Dataset Governance (NEW!)
+Contract-governed control layer for dataset execution with:
+- Dataset contracts in YAML
+- Runtime parameter validation
+- Contract-defined storage paths
+- Legacy script wrapper execution
+- Run manifests for tracking
 
 ## What This Repo Does
 
 ✅ Defines where data lives in GCS (zone paths)  
 ✅ Configures the Iceberg catalog (SQL/SQLite for metadata)  
 ✅ Provides table contracts (names, zones, partitions)  
+✅ **Governs dataset execution with contracts**  
+✅ **Validates parameters and generates paths**  
+✅ **Wraps legacy scripts under governance**  
 ✅ Exposes a clean Python API for consuming repositories  
 
 ## What This Repo Does NOT Do
@@ -32,6 +49,8 @@ pip install -e .
 ```
 
 ## Usage
+
+### lakehouse_core - Platform Definitions
 
 ```python
 from lakehouse_core import get_lakehouse_config
@@ -55,6 +74,34 @@ table = catalog.load_table(identifier)
 zone_path = zone_prefix("bronze")
 table_path = table_prefix("bronze.your_table_name")
 ```
+
+### contracts_core - Dataset Governance
+
+```python
+from contracts_core import run_dataset, list_available_contracts
+
+# List available datasets
+contracts = list_available_contracts()
+print(f"Available: {contracts}")
+
+# Run a dataset with governance
+result = run_dataset(
+    dataset_id="cenace_pml",
+    params={
+        "market": "MDA",
+        "region": "BCA",
+        "start_date": "2024-01-01",
+        "end_date": "2024-01-31"
+    }
+)
+
+print(f"Run ID: {result['run_id']}")
+print(f"Status: {result['status']}")
+print(f"Paths: {result['output_paths']}")
+print(f"Manifest: {result['manifest_location']}")
+```
+
+See `examples_contracts_core.py` for more examples.
 
 ## Configuration
 
@@ -106,6 +153,62 @@ When adding a new dataset, follow the standards guide:
 See `docs/ADDING_NEW_DATASETS.md` for complete guide and standards checklist.
 
 **Note:** BigQuery is not used as an Iceberg catalog in this repo. BigQuery may be used as a compute engine (via BigLake/external tables) in consuming repositories, but the catalog uses SQL (SQLite) for metadata storage.
+
+## Dataset Governance with contracts_core
+
+The `contracts_core` package provides contract-governed dataset execution:
+
+### Key Features
+
+- **YAML Contracts**: Define parameters, schemas, partitioning, and storage paths once
+- **Parameter Validation**: Enforce types, required fields, and allowed values
+- **Path Generation**: Storage paths generated from contracts (no hardcoding)
+- **Legacy Scripts**: Wrap existing scripts without modification
+- **Run Manifests**: Track every run with complete metadata
+
+### Quick Start
+
+1. **Create a dataset contract** in `src/contracts_core/contracts/`:
+   ```yaml
+   dataset_id: my_dataset
+   version: "1.0.0"
+   params:
+     - name: region
+       type: string
+       required: true
+   storage:
+     bronze: "bronze/domain/dataset"
+     silver: "silver/domain/dataset"
+     gold: "gold/domain/dataset"
+   source:
+     type: legacy_script
+     script_path: "scripts/legacy/extract.py"
+   ```
+
+2. **Run the dataset**:
+   ```python
+   from contracts_core import run_dataset
+   
+   result = run_dataset(
+       dataset_id="my_dataset",
+       params={"region": "US"}
+   )
+   ```
+
+3. **Check results**: Manifest written with paths, timestamps, and status.
+
+### Documentation
+
+- **API Reference**: `src/contracts_core/README.md`
+- **Integration Guide**: `docs/CONTRACTS_CORE_GUIDE.md`
+- **Examples**: `examples_contracts_core.py`
+
+### Benefits
+
+✅ Adding a dataset = adding a YAML contract  
+✅ Multiple repositories can import for identical behavior  
+✅ Legacy scripts execute under governance  
+✅ No hardcoded paths or parameters  
 
 ## License
 
