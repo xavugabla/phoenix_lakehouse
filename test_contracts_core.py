@@ -106,7 +106,7 @@ def test_invalid_params():
     print("="*60)
     
     try:
-        result = run_dataset(
+        run_dataset(
             dataset_id="cenace_pml",
             params={
                 "market": "INVALID",  # Not in allowed_values
