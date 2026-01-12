@@ -5,7 +5,7 @@ This module validates that runtime parameters match the contract specifications.
 """
 from typing import Dict, Any, List
 from datetime import datetime
-from .loader import DatasetContract, ParamDefinition, ContractError
+from .loader import DatasetContract, ParamDefinition
 
 
 class ParamValidationError(Exception):
