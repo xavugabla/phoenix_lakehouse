@@ -127,7 +127,7 @@ def example_5_parameter_validation():
     print("\nAttempting to run with invalid parameters...")
     
     try:
-        result = run_dataset(
+        run_dataset(
             dataset_id="cenace_pml",
             params={
                 "market": "INVALID_MARKET",  # Not in allowed_values
