@@ -7,7 +7,7 @@ from YAML files.
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 import yaml
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ValidationError
 
 
 class ParamDefinition(BaseModel):
