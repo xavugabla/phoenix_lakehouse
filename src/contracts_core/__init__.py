@@ -128,7 +128,12 @@ def _execute_legacy_script(
         raise DatasetRunError(f"Legacy script not found: {script_path}")
     
     # Build command
-    cmd = [str(script)]
+    if script.suffix == ".py":
+        # Explicitly invoke Python interpreter for Python scripts
+        cmd = [sys.executable, str(script)]
+    else:
+        # Fallback to executing the script directly (for non-Python executables)
+        cmd = [str(script)]
     
     # Add parameters as command-line arguments
     for key, value in params.items():
