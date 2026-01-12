@@ -100,7 +100,10 @@ class RunManifest:
         Returns:
             JSON string representation
         """
-        return json.dumps(self.to_dict(), indent=indent)
+        try:
+            return json.dumps(self.to_dict(), indent=indent, ensure_ascii=False)
+        except TypeError as exc:
+            raise ManifestError(f"Failed to serialize run manifest to JSON: {exc}") from exc
 
 
 def create_manifest(
