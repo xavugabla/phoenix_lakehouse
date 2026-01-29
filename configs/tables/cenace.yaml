@@ -64,3 +64,191 @@ tables:
     partition_by: ["market", "region", "zone", "year"]
     description: "Ancillary services prices (Precios de Servicios Conexos)"
 
+
+  # ============================================================================
+  # SILVER ZONE - Curated Analytics Tables
+  # ============================================================================
+
+  silver.pml_daily:
+    domain: "cenace"
+    zone: "silver"
+    schema: "pml_daily_silver"
+    partition_by: ["market", "region", "year", "month"]
+    description: "Daily PML aggregates per node with statistics (mean, min, max, std, spread)"
+
+  silver.pml_monthly:
+    domain: "cenace"
+    zone: "silver"
+    schema: "pml_monthly_silver"
+    partition_by: ["market", "region", "year"]
+    description: "Monthly PML aggregates per node with trends and seasonal patterns"
+
+  silver.pend_daily:
+    domain: "cenace"
+    zone: "silver"
+    schema: "pend_daily_silver"
+    partition_by: ["market", "region", "year", "month"]
+    description: "Daily PEND aggregates per zone with statistics"
+
+  silver.pend_monthly:
+    domain: "cenace"
+    zone: "silver"
+    schema: "pend_monthly_silver"
+    partition_by: ["market", "region", "year"]
+    description: "Monthly PEND aggregates per zone with trends"
+
+  silver.psc_daily:
+    domain: "cenace"
+    zone: "silver"
+    schema: "psc_daily_silver"
+    partition_by: ["market", "region", "year", "month"]
+    description: "Daily PSC (ancillary services) aggregates per zone"
+
+  silver.price_volatility:
+    domain: "cenace"
+    zone: "silver"
+    schema: "price_volatility_silver"
+    partition_by: ["market", "region", "year", "month"]
+    description: "Rolling volatility metrics (7d, 30d std, CV, spike detection)"
+
+  silver.node_zone_metrics:
+    domain: "cenace"
+    zone: "silver"
+    schema: "node_zone_metrics_silver"
+    partition_by: ["market", "region", "year", "month"]
+    description: "Node-to-zone correlations, PML vs PEND spreads, congestion patterns"
+
+
+
+  silver.node_hourly_profile:
+    domain: "cenace"
+    zone: "silver"
+    schema: "node_hourly_profile_silver"
+    partition_by: ["market", "region", "year", "month"]
+    description: "Hourly price profile per node (diurnal signature and distribution stats)"
+
+  silver.node_weekday_profile:
+    domain: "cenace"
+    zone: "silver"
+    schema: "node_weekday_profile_silver"
+    partition_by: ["market", "region", "year", "month"]
+    description: "Weekday/weekend profile per node with distribution stats"
+
+  silver.node_monthly_profile:
+    domain: "cenace"
+    zone: "silver"
+    schema: "node_monthly_profile_silver"
+    partition_by: ["market", "region", "year"]
+    description: "Monthly profile per node with distribution stats"
+
+  silver.node_ramp_daily:
+    domain: "cenace"
+    zone: "silver"
+    schema: "node_ramp_daily_silver"
+    partition_by: ["market", "region", "year", "month"]
+    description: "Daily ramp rate metrics per node"
+
+  silver.node_regime_stats:
+    domain: "cenace"
+    zone: "silver"
+    schema: "node_regime_stats_silver"
+    partition_by: ["market", "region", "year"]
+    description: "Per-node price regime and tail statistics"
+
+  silver.node_event_stats:
+    domain: "cenace"
+    zone: "silver"
+    schema: "node_event_stats_silver"
+    partition_by: ["market", "region", "year"]
+    description: "Per-node extreme event and streak statistics"
+
+  # Business-aggregate tables (same content as gold, partitioned for pipeline/history)
+  silver.market_summary:
+    domain: "cenace"
+    zone: "silver"
+    schema: "market_summary_silver"
+    partition_by: ["market", "region", "run_date"]
+    description: "Executive market summary (partitioned); consumable view in gold"
+
+  silver.node_rankings:
+    domain: "cenace"
+    zone: "silver"
+    schema: "node_rankings_silver"
+    partition_by: ["market", "region", "run_date"]
+    description: "Node rankings (partitioned); consumable view in gold"
+
+  silver.zone_analytics:
+    domain: "cenace"
+    zone: "silver"
+    schema: "zone_analytics_silver"
+    partition_by: ["market", "region", "run_date"]
+    description: "Zone analytics (partitioned); consumable view in gold"
+
+  silver.risk_dashboard:
+    domain: "cenace"
+    zone: "silver"
+    schema: "risk_dashboard_silver"
+    partition_by: ["market", "region", "run_date"]
+    description: "Risk dashboard (partitioned); consumable view in gold"
+
+  silver.node_profile:
+    domain: "cenace"
+    zone: "silver"
+    schema: "node_profile_silver"
+    partition_by: ["market", "region", "run_date"]
+    description: "Node profile (partitioned); consumable view in gold"
+
+  silver.node_time_signature:
+    domain: "cenace"
+    zone: "silver"
+    schema: "node_time_signature_silver"
+    partition_by: ["market", "region", "run_date"]
+    description: "Node time signature (partitioned); consumable view in gold"
+
+  # ============================================================================
+  # GOLD ZONE - Consumable Business Metrics (one file per table, no partitions)
+  # ============================================================================
+  # Gold = consumable: one Parquet file per table at stable path; overwrite each run.
+  # Path: gs://{bucket}/gold/cenace/{table_base}/{table_base}.parquet
+
+  gold.market_summary:
+    domain: "cenace"
+    zone: "gold"
+    schema: "market_summary_gold"
+    partition_by: []
+    description: "Executive market summary (consumable: one file per table)"
+
+  gold.node_rankings:
+    domain: "cenace"
+    zone: "gold"
+    schema: "node_rankings_gold"
+    partition_by: []
+    description: "Node rankings (consumable: one file per table)"
+
+  gold.zone_analytics:
+    domain: "cenace"
+    zone: "gold"
+    schema: "zone_analytics_gold"
+    partition_by: []
+    description: "Load zone summaries (consumable: one file per table)"
+
+  gold.risk_dashboard:
+    domain: "cenace"
+    zone: "gold"
+    schema: "risk_dashboard_gold"
+    partition_by: []
+    description: "Risk metrics (consumable: one file per table)"
+
+  gold.node_profile:
+    domain: "cenace"
+    zone: "gold"
+    schema: "node_profile_gold"
+    partition_by: []
+    description: "Consolidated node profile (consumable: one file per table)"
+
+  gold.node_time_signature:
+    domain: "cenace"
+    zone: "gold"
+    schema: "node_time_signature_gold"
+    partition_by: []
+    description: "Node time signature (consumable: one file per table)"
