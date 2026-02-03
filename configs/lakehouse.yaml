@@ -1,8 +1,9 @@
 # Lakehouse Platform Configuration
 # This file defines the storage layout, catalog, and table contracts
 
-bucket: "lakehouse_phoenix"
+bucket: "novagrid-lakehouse"
 prefix: ""  # Optional prefix for organization (e.g., "prod/", "dev/")
+warehouse: "gs://novagrid-lakehouse/"
 
 zones:
   raw: "raw"
@@ -13,7 +14,12 @@ zones:
 catalog:
   type: "sql"
   uri: "sqlite:///iceberg_catalog.db"  # SQLite database path (can be absolute or relative)
-  warehouse: "gs://lakehouse_phoenix/iceberg/"  # GCS path for table data storage
+  warehouse: "gs://novagrid-lakehouse/"  # GCS path for table data storage
+
+# Legacy bucket (read-only archive)
+legacy:
+  bucket: "lakehouse_phoenix"
+  warehouse: "gs://lakehouse_phoenix/"
 
 # Table contracts can be defined here OR in modular files (configs/tables/*.yaml)
 # Modular files are recommended for better organization as domains grow

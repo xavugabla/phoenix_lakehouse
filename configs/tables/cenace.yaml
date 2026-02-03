@@ -1,68 +1,128 @@
 # CENACE Energy Data Table Contracts
 # This file defines table contracts for CENACE datasets (PEND, PML, PSC)
+#
+# Architecture Note:
+# - Raw zone: ingestion landing (plain parquet, partitioned by ingestion_date)
+# - Bronze zone: curated Iceberg tables with proper partitioning
+# - Silver/Gold zones: analytics and consumable tables
 
-# CENACE Energy Data – RAW Zone Table Contracts
-# These are the 6 raw datasets you extract with Prefect.
-# Keep it extremely simple at this stage.
+# =============================================================================
+# RAW ZONE - Ingestion Landing (Plain Parquet)
+# =============================================================================
+# These are the 6 raw datasets extracted from CENACE API.
+# Keep it extremely simple at this stage - just landing data.
 
 tables:
   raw.pend_mda:
     domain: "cenace"
     zone: "raw"
+    format: "parquet"
     partition_by: ["ingestion_date"]
     description: "Raw PEND MDA data"
 
   raw.pend_mtr:
     domain: "cenace"
     zone: "raw"
+    format: "parquet"
     partition_by: ["ingestion_date"]
     description: "Raw PEND MTR data"
 
   raw.pml_mda:
     domain: "cenace"
     zone: "raw"
+    format: "parquet"
     partition_by: ["ingestion_date"]
     description: "Raw PML MDA data"
 
   raw.pml_mtr:
     domain: "cenace"
     zone: "raw"
+    format: "parquet"
     partition_by: ["ingestion_date"]
     description: "Raw PML MTR data"
 
   raw.psc_mda:
     domain: "cenace"
     zone: "raw"
+    format: "parquet"
     partition_by: ["ingestion_date"]
     description: "Raw PSC MDA data"
 
   raw.psc_mtr:
     domain: "cenace"
     zone: "raw"
+    format: "parquet"
     partition_by: ["ingestion_date"]
     description: "Raw PSC MTR data"
 
+  # ===========================================================================
+  # BRONZE ZONE - Curated Iceberg Tables
+  # ===========================================================================
+  # Partition scheme: [market] only
+  # - Only 2 partitions per table: MDA, MTR
+  # - Simplified from previous [market, region, year] scheme
+  # - Target file size: 80MB for optimal query performance
+
+  bronze.pml:
+    domain: "cenace"
+    zone: "bronze"
+    format: "iceberg"
+    schema: "pml_bronze"
+    partition_by: ["market"]
+    target_file_size_mb: 80
+    description: "Locational marginal prices by node (Precios Marginales Locales)"
 
   bronze.pend:
     domain: "cenace"
     zone: "bronze"
+    format: "iceberg"
     schema: "pend_bronze"
-    partition_by: ["market", "region", "zone", "year"]
+    partition_by: ["market"]
+    target_file_size_mb: 80
     description: "Energy prices by load zone (Precios de Energía en Nodos Distribuidos)"
-  
-  bronze.pml:
-    domain: "cenace"
-    zone: "bronze"
-    schema: "pml_bronze"
-    partition_by: ["market", "region", "node", "year"]
-    description: "Locational marginal prices by node (Precios Marginales Locales)"
-  
+
   bronze.psc:
     domain: "cenace"
     zone: "bronze"
+    format: "iceberg"
+    schema: "psc_bronze"
+    partition_by: ["market"]
+    target_file_size_mb: 80
+    description: "Ancillary services prices (Precios de Servicios Conexos)"
+
+  # ===========================================================================
+  # BRONZE ZONE - Legacy Parquet Tables (Deprecated)
+  # ===========================================================================
+  # These are the old partition schemes kept for migration reference.
+  # Data will be migrated from these paths to the new Iceberg tables.
+  # Legacy paths: gs://lakehouse_phoenix/bronze/cenace/{pend,pml,psc}/
+
+  bronze.pend_legacy:
+    domain: "cenace"
+    zone: "bronze"
+    format: "parquet"
+    schema: "pend_bronze"
+    partition_by: ["market", "region", "zone", "year"]
+    deprecated: true
+    description: "[DEPRECATED] Legacy PEND partitioned by zone - migrate to bronze.pend"
+
+  bronze.pml_legacy:
+    domain: "cenace"
+    zone: "bronze"
+    format: "parquet"
+    schema: "pml_bronze"
+    partition_by: ["market", "region", "node", "year"]
+    deprecated: true
+    description: "[DEPRECATED] Legacy PML partitioned by node - migrate to bronze.pml"
+
+  bronze.psc_legacy:
+    domain: "cenace"
+    zone: "bronze"
+    format: "parquet"
     schema: "psc_bronze"
     partition_by: ["market", "region", "zone", "year"]
-    description: "Ancillary services prices (Precios de Servicios Conexos)"
+    deprecated: true
+    description: "[DEPRECATED] Legacy PSC partitioned by zone - migrate to bronze.psc"
 
 
   # ============================================================================
