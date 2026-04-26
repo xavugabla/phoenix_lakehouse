@@ -1,0 +1,1 @@
+{"nodes": [{"id": "lakehouse_core", "type": "package", "label": "lakehouse_core", "description": "Core Python library providing contracts, configuration, catalog access, path helpers, and table management for the Iceberg + GCS lakehouse platform. Pure library with no ETL logic.", "source_file": "src/lakehouse_core/__init__.py", "version": "0.1.0"}], "edges": [], "hyperedges": []}

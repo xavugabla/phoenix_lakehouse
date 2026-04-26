@@ -1,0 +1,1 @@
+{"nodes": [{"id": "setup_ps1", "type": "script", "label": "setup.ps1", "description": "PowerShell setup script that creates a Python venv, installs lakehouse-core in editable mode, and optionally installs dev dependencies.", "source_file": "setup.ps1"}], "edges": [], "hyperedges": []}

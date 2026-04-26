@@ -1,0 +1,987 @@
+{
+  "nodes": [
+    {
+      "id": "phoenix_lakehouse",
+      "type": "repository",
+      "label": "phoenix_lakehouse",
+      "description": "Lakehouse core library providing contracts, definitions, Iceberg catalog config, GCS storage layout, and table contracts for the Proxima energy analytics platform",
+      "source_file": "README.md"
+    },
+    {
+      "id": "lakehouse_core_package",
+      "type": "package",
+      "label": "lakehouse_core",
+      "description": "Python package exposing lakehouse config, catalog access, paths, and table identifiers as a clean API for consuming repos",
+      "source_file": "README.md"
+    },
+    {
+      "id": "lakehouse_core_config",
+      "type": "module",
+      "label": "lakehouse_core.config",
+      "description": "Loads and validates lakehouse.yaml; exposes LakehouseConfig Pydantic model and get_lakehouse_config()",
+      "source_file": "clearreadme.md"
+    },
+    {
+      "id": "lakehouse_core_catalogs",
+      "type": "module",
+      "label": "lakehouse_core.catalogs",
+      "description": "Builds and returns a PyIceberg catalog client from config; exposes get_iceberg_catalog()",
+      "source_file": "clearreadme.md"
+    },
+    {
+      "id": "lakehouse_core_paths",
+      "type": "module",
+      "label": "lakehouse_core.paths",
+      "description": "Helper functions for building GCS paths: zone_prefix(), table_prefix(), get_full_gcs_path()",
+      "source_file": "clearreadme.md"
+    },
+    {
+      "id": "lakehouse_core_tables",
+      "type": "module",
+      "label": "lakehouse_core.tables",
+      "description": "Table identifiers, contracts, and utilities: get_table_identifier(), get_table_contract()",
+      "source_file": "clearreadme.md"
+    },
+    {
+      "id": "lakehouse_config_yaml",
+      "type": "config_file",
+      "label": "configs/lakehouse.yaml",
+      "description": "Central YAML config defining GCS bucket, prefix, zones (raw/bronze/silver/gold), catalog settings, and table contracts",
+      "source_file": "clearreadme.md"
+    },
+    {
+      "id": "table_contracts_dir",
+      "type": "config_directory",
+      "label": "configs/tables/",
+      "description": "Modular table contract definitions organized by domain; YAML files auto-merged by config loader",
+      "source_file": "configs/tables/README.md"
+    },
+    {
+      "id": "cenace_table_contracts",
+      "type": "config_file",
+      "label": "configs/tables/cenace.yaml",
+      "description": "CENACE domain table contracts: bronze.pend (partitioned by market/region/zone/year) and bronze.pml (partitioned by market/region/node/year)",
+      "source_file": "configs/tables/README.md"
+    },
+    {
+      "id": "zone_raw",
+      "type": "concept",
+      "label": "Raw Zone",
+      "description": "Immutable storage of source JSON/XML files in GCS for replay and debugging; no Iceberg tables",
+      "source_file": "README.md"
+    },
+    {
+      "id": "zone_bronze",
+      "type": "concept",
+      "label": "Bronze Zone",
+      "description": "Minimally structured Iceberg tables close to source; may include raw_payload column; first structured format (Parquet)",
+      "source_file": "README.md"
+    },
+    {
+      "id": "zone_silver",
+      "type": "concept",
+      "label": "Silver Zone",
+      "description": "Cleaned, normalized, typed Iceberg tables ready for analytics and joining; validated and deduplicated",
+      "source_file": "README.md"
+    },
+    {
+      "id": "zone_gold",
+      "type": "concept",
+      "label": "Gold Zone",
+      "description": "Feature/metrics/result Iceberg tables for modeling, dashboards, Monte Carlo outputs; business-ready aggregations",
+      "source_file": "README.md"
+    },
+    {
+      "id": "apache_iceberg",
+      "type": "technology",
+      "label": "Apache Iceberg",
+      "description": "Open table format used as the core abstraction for all structured data across bronze/silver/gold zones",
+      "source_file": "README.md"
+    },
+    {
+      "id": "gcs_storage",
+      "type": "technology",
+      "label": "Google Cloud Storage (GCS)",
+      "description": "Single data lake storage layer; bucket novagrid-lakehouse is the canonical warehouse",
+      "source_file": "README.md"
+    },
+    {
+      "id": "pyiceberg",
+      "type": "dependency",
+      "label": "pyiceberg[gcp]",
+      "description": "Python library for Apache Iceberg with GCP support; runtime dependency >=0.10.0",
+      "source_file": "requirements.txt"
+    },
+    {
+      "id": "pydantic",
+      "type": "dependency",
+      "label": "pydantic",
+      "description": "Data validation library used for LakehouseConfig model; runtime dependency >=2.0.0",
+      "source_file": "requirements.txt"
+    },
+    {
+      "id": "pyyaml",
+      "type": "dependency",
+      "label": "PyYAML",
+      "description": "YAML parser for loading lakehouse.yaml config; runtime dependency >=6.0",
+      "source_file": "requirements.txt"
+    },
+    {
+      "id": "google_cloud_storage_dep",
+      "type": "dependency",
+      "label": "google-cloud-storage",
+      "description": "GCS client library; runtime dependency >=2.10.0",
+      "source_file": "requirements.txt"
+    },
+    {
+      "id": "google_auth_dep",
+      "type": "dependency",
+      "label": "google-auth",
+      "description": "Google authentication library; runtime dependency >=2.23.0",
+      "source_file": "requirements.txt"
+    },
+    {
+      "id": "hadoop_catalog",
+      "type": "concept",
+      "label": "Hadoop/File-based Catalog",
+      "description": "Iceberg catalog type used: file-based on GCS, storing all metadata (snapshots, schemas, manifests) directly in GCS warehouse path; no external catalog service required",
+      "source_file": "SETUP.md"
+    },
+    {
+      "id": "sql_sqlite_catalog",
+      "type": "concept",
+      "label": "SQL Catalog (SQLite)",
+      "description": "Alternative catalog configuration mentioned in docs: SQLite stores catalog metadata locally while GCS stores table data; portable and simple",
+      "source_file": "docs/CATALOG_SETUP.md"
+    },
+    {
+      "id": "data_pipeline_repo",
+      "type": "external_repository",
+      "label": "data-pipeline",
+      "description": "Prefect-based ETL repo that fetches raw CENACE data, persists to raw zone, writes to bronze Iceberg tables; primary consumer of phoenix_lakehouse",
+      "source_file": "gptreadmegoals.md"
+    },
+    {
+      "id": "data_manager_repo",
+      "type": "external_repository",
+      "label": "data-manager",
+      "description": "Enrichment repo that reads bronze/silver tables, performs joins, writes to silver and gold Iceberg tables",
+      "source_file": "gptreadmegoals.md"
+    },
+    {
+      "id": "revenue_models_repo",
+      "type": "external_repository",
+      "label": "revenue-models",
+      "description": "Monte Carlo simulation and optimization repo; reads from gold tables, writes results back to gold zone",
+      "source_file": "gptreadmegoals.md"
+    },
+    {
+      "id": "novafront_repo",
+      "type": "external_repository",
+      "label": "novafront",
+      "description": "Full-stack revenue modeling UI; reference consumer aligned on novagrid-lakehouse bucket",
+      "source_file": "docs/new_arq.md"
+    },
+    {
+      "id": "novagrid_repo",
+      "type": "external_repository",
+      "label": "novagrid",
+      "description": "Revenue modeling engine; consumer of canonical lakehouse data from novagrid-lakehouse bucket",
+      "source_file": "docs/new_arq.md"
+    },
+    {
+      "id": "lakehouse_config_model",
+      "type": "class",
+      "label": "LakehouseConfig",
+      "description": "Pydantic BaseModel with fields: bucket (str), prefix (str), zones (dict), catalog (dict), tables (dict)",
+      "source_file": "clearreadme.md"
+    },
+    {
+      "id": "get_lakehouse_config_fn",
+      "type": "function",
+      "label": "get_lakehouse_config()",
+      "description": "Returns validated LakehouseConfig singleton loaded from configs/lakehouse.yaml",
+      "source_file": "clearreadme.md"
+    },
+    {
+      "id": "get_iceberg_catalog_fn",
+      "type": "function",
+      "label": "get_iceberg_catalog()",
+      "description": "Builds and returns a PyIceberg catalog client using config from get_lakehouse_config()",
+      "source_file": "clearreadme.md"
+    },
+    {
+      "id": "get_table_identifier_fn",
+      "type": "function",
+      "label": "get_table_identifier()",
+      "description": "Splits dotted table name into (namespace, table_name) tuple for PyIceberg catalog operations",
+      "source_file": "clearreadme.md"
+    },
+    {
+      "id": "get_table_contract_fn",
+      "type": "function",
+      "label": "get_table_contract()",
+      "description": "Returns table contract dict (domain, zone, schema, partition_by) for a given table name",
+      "source_file": "docs/MIGRATION_PLAN.md"
+    },
+    {
+      "id": "zone_prefix_fn",
+      "type": "function",
+      "label": "zone_prefix()",
+      "description": "Returns GCS path prefix for a given zone name (e.g., 'bronze/')",
+      "source_file": "clearreadme.md"
+    },
+    {
+      "id": "table_prefix_fn",
+      "type": "function",
+      "label": "table_prefix()",
+      "description": "Returns GCS path prefix for a table including zone and domain (e.g., 'bronze/cenace/pend/')",
+      "source_file": "clearreadme.md"
+    },
+    {
+      "id": "get_full_gcs_path_fn",
+      "type": "function",
+      "label": "get_full_gcs_path()",
+      "description": "Returns fully qualified GCS URI for a table (e.g., 'gs://lakehouse_phoenix/bronze/cenace/pend/')",
+      "source_file": "docs/MIGRATION_GUIDE.md"
+    },
+    {
+      "id": "table_contract_concept",
+      "type": "concept",
+      "label": "Table Contract",
+      "description": "A YAML-defined specification for an Iceberg table: domain, zone, schema key, partition_by fields, and optional description; enforces naming conventions and standards",
+      "source_file": "docs/ADDING_NEW_DATASETS.md"
+    },
+    {
+      "id": "bronze_pend_table",
+      "type": "table",
+      "label": "bronze.pend",
+      "description": "CENACE PEND (zonal prices) bronze Iceberg table; partitioned by market, region, zone, year",
+      "source_file": "configs/tables/README.md"
+    },
+    {
+      "id": "bronze_pml_table",
+      "type": "table",
+      "label": "bronze.pml",
+      "description": "CENACE PML (nodal prices) bronze Iceberg table; partitioned by market, region, node, year",
+      "source_file": "configs/tables/README.md"
+    },
+    {
+      "id": "novagrid_lakehouse_bucket",
+      "type": "infrastructure",
+      "label": "gs://novagrid-lakehouse",
+      "description": "Canonical active lakehouse GCS bucket; single warehouse for all repos",
+      "source_file": "docs/new_arq.md"
+    },
+    {
+      "id": "lakehouse_phoenix_bucket",
+      "type": "infrastructure",
+      "label": "gs://lakehouse_phoenix",
+      "description": "Legacy/frozen parquet archive bucket; migration source, no new writes",
+      "source_file": "docs/new_arq.md"
+    },
+    {
+      "id": "novogrid_workqueue_bucket",
+      "type": "infrastructure",
+      "label": "gs://novogrid-workqueue",
+      "description": "Frozen legacy bucket; no active writes, archived",
+      "source_file": "docs/new_arq.md"
+    },
+    {
+      "id": "cenace_workers",
+      "type": "component",
+      "label": "cenace_workers",
+      "description": "Canonical ingestion/backfill implementation in data_pipeline; writes bronze into novagrid-lakehouse",
+      "source_file": "docs/new_arq.md"
+    },
+    {
+      "id": "migration_parquet_to_iceberg",
+      "type": "process",
+      "label": "Parquet-to-Iceberg Migration",
+      "description": "Process of migrating consolidated Parquet files from data_pipeline/data/ into Iceberg bronze tables in GCS; migration scripts live in data-pipeline repo",
+      "source_file": "docs/MIGRATION_PLAN.md"
+    },
+    {
+      "id": "design_principle_storage_sor",
+      "type": "rationale",
+      "label": "Storage as System of Record",
+      "description": "Design principle: GCS + Iceberg is the system of record; compute engines (BigQuery, DuckDB, Spark) are disposable and interchangeable",
+      "source_file": "gptreadmegoals.md"
+    },
+    {
+      "id": "design_principle_no_hardcoded_paths",
+      "type": "rationale",
+      "label": "No Hardcoded Paths",
+      "description": "Design principle: no repo hardcodes GCS paths or schemas; all table definitions and layout live in lakehouse-core as the single source of truth",
+      "source_file": "gptreadmegoals.md"
+    },
+    {
+      "id": "design_principle_pure_library",
+      "type": "rationale",
+      "label": "Pure Library Boundary",
+      "description": "Design principle: phoenix_lakehouse is strictly a library providing contracts and definitions; no ETL, no Prefect, no API calls, no data writing; all operational logic belongs in consuming repos",
+      "source_file": "clearreadme.md"
+    },
+    {
+      "id": "design_principle_raw_preservation",
+      "type": "rationale",
+      "label": "Raw Data Preservation",
+      "description": "Design principle: always keep a raw copy of source data (files and/or raw_payload) and treat bronze as minimally transformed; enables replay and debugging",
+      "source_file": "gptreadmegoals.md"
+    },
+    {
+      "id": "design_principle_pinned_contracts",
+      "type": "rationale",
+      "label": "Pinned Contract Authority",
+      "description": "Design principle: consumers use phoenix_lakehouse through pinned versions (semver or date-based); upgrades are deliberate; worker snapshots are labeled artifacts with source revision metadata",
+      "source_file": "docs/new_arq.md"
+    },
+    {
+      "id": "unification_plan",
+      "type": "document",
+      "label": "Lakehouse Unification Plan",
+      "description": "Strategic plan to unify all data paths around gs://novagrid-lakehouse as single canonical warehouse; freeze legacy buckets; standardize contract authority through pinned phoenix_lakehouse",
+      "source_file": "docs/new_arq.md"
+    },
+    {
+      "id": "bigquery_not_catalog",
+      "type": "rationale",
+      "label": "BigQuery Not Used as Catalog",
+      "description": "Explicit decision: BigQuery is not used as an Iceberg catalog in this repo; it may be used as a compute engine via BigLake/external tables in consuming repos; catalog uses file-based/SQL approach",
+      "source_file": "SETUP.md"
+    },
+    {
+      "id": "modular_table_contracts",
+      "type": "pattern",
+      "label": "Modular Table Contracts Pattern",
+      "description": "Recommended approach: domain-specific YAML files in configs/tables/ rather than inline in lakehouse.yaml; scales better, clear git diffs, auto-merged by config loader",
+      "source_file": "README.md"
+    },
+    {
+      "id": "naming_conventions",
+      "type": "concept",
+      "label": "Naming Conventions",
+      "description": "Standards: table names as {zone}.{table_name} in snake_case lowercase; domain names lowercase; schema keys as {table_name}_{zone}; partition keys must exist in schema",
+      "source_file": "docs/ADDING_NEW_DATASETS.md"
+    },
+    {
+      "id": "duckdb",
+      "type": "technology",
+      "label": "DuckDB",
+      "description": "Optional local analytics engine for reading Iceberg/Parquet on GCS for quick modeling and exploration",
+      "source_file": "gptreadmegoals.md"
+    },
+    {
+      "id": "bigquery",
+      "type": "technology",
+      "label": "BigQuery",
+      "description": "Optional compute engine (not source of truth); accesses Iceberg tables via BigLake/external tables for ad-hoc SQL and dashboards",
+      "source_file": "gptreadmegoals.md"
+    },
+    {
+      "id": "prefect",
+      "type": "technology",
+      "label": "Prefect",
+      "description": "Orchestration engine for running ETL flows; used in data-pipeline and data-manager repos, explicitly excluded from phoenix_lakehouse",
+      "source_file": "gptreadmegoals.md"
+    }
+  ],
+  "edges": [
+    {
+      "source": "phoenix_lakehouse",
+      "target": "lakehouse_core_package",
+      "type": "contains",
+      "label": "exposes as installable package",
+      "evidence": "README.md: 'Exposes a clean Python API for consuming repositories'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lakehouse_core_package",
+      "target": "lakehouse_core_config",
+      "type": "contains",
+      "label": "contains module",
+      "evidence": "clearreadme.md structure listing config.py",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lakehouse_core_package",
+      "target": "lakehouse_core_catalogs",
+      "type": "contains",
+      "label": "contains module",
+      "evidence": "clearreadme.md structure listing catalogs.py",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lakehouse_core_package",
+      "target": "lakehouse_core_paths",
+      "type": "contains",
+      "label": "contains module",
+      "evidence": "clearreadme.md structure listing paths.py",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lakehouse_core_package",
+      "target": "lakehouse_core_tables",
+      "type": "contains",
+      "label": "contains module",
+      "evidence": "clearreadme.md structure listing tables.py",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lakehouse_core_config",
+      "target": "lakehouse_config_yaml",
+      "type": "reads",
+      "label": "loads and validates YAML config",
+      "evidence": "clearreadme.md: 'Load and validate lakehouse.yaml'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lakehouse_core_config",
+      "target": "lakehouse_config_model",
+      "type": "defines",
+      "label": "defines Pydantic config model",
+      "evidence": "clearreadme.md: class LakehouseConfig(BaseModel)",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lakehouse_core_config",
+      "target": "get_lakehouse_config_fn",
+      "type": "exposes",
+      "label": "exposes function",
+      "evidence": "clearreadme.md: 'def get_lakehouse_config() -> LakehouseConfig'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lakehouse_core_catalogs",
+      "target": "get_iceberg_catalog_fn",
+      "type": "exposes",
+      "label": "exposes function",
+      "evidence": "clearreadme.md: 'def get_iceberg_catalog()'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "get_iceberg_catalog_fn",
+      "target": "get_lakehouse_config_fn",
+      "type": "calls",
+      "label": "reads config to build catalog",
+      "evidence": "clearreadme.md: 'cfg = get_lakehouse_config()' inside get_iceberg_catalog",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lakehouse_core_paths",
+      "target": "zone_prefix_fn",
+      "type": "exposes",
+      "label": "exposes function",
+      "evidence": "clearreadme.md: 'def zone_prefix(zone: str) -> str'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lakehouse_core_paths",
+      "target": "table_prefix_fn",
+      "type": "exposes",
+      "label": "exposes function",
+      "evidence": "clearreadme.md: 'def table_prefix(table_name: str) -> str'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lakehouse_core_paths",
+      "target": "get_full_gcs_path_fn",
+      "type": "exposes",
+      "label": "exposes function",
+      "evidence": "docs/MIGRATION_GUIDE.md: 'from lakehouse_core.paths import ... get_full_gcs_path'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "zone_prefix_fn",
+      "target": "get_lakehouse_config_fn",
+      "type": "calls",
+      "label": "reads config for zone paths",
+      "evidence": "clearreadme.md: 'cfg = get_lakehouse_config()' inside zone_prefix",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "table_prefix_fn",
+      "target": "zone_prefix_fn",
+      "type": "calls",
+      "label": "delegates zone path construction",
+      "evidence": "clearreadme.md: 'f\"{zone_prefix(table[\"zone\"])}...\"' inside table_prefix",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lakehouse_core_tables",
+      "target": "get_table_identifier_fn",
+      "type": "exposes",
+      "label": "exposes function",
+      "evidence": "clearreadme.md: 'def get_table_identifier(name: str) -> Identifier'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lakehouse_core_tables",
+      "target": "get_table_contract_fn",
+      "type": "exposes",
+      "label": "exposes function",
+      "evidence": "docs/MIGRATION_PLAN.md: 'from lakehouse_core.tables import ... get_table_contract'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lakehouse_config_yaml",
+      "target": "table_contracts_dir",
+      "type": "merges_with",
+      "label": "modular table files auto-merged into config",
+      "evidence": "configs/tables/README.md: 'The config loader will automatically merge all table contracts'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "table_contracts_dir",
+      "target": "cenace_table_contracts",
+      "type": "contains",
+      "label": "contains CENACE domain file",
+      "evidence": "configs/tables/README.md lists cenace.yaml",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "cenace_table_contracts",
+      "target": "bronze_pend_table",
+      "type": "defines",
+      "label": "defines table contract",
+      "evidence": "configs/tables/README.md: 'bronze.pend: domain: cenace'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "cenace_table_contracts",
+      "target": "bronze_pml_table",
+      "type": "defines",
+      "label": "defines table contract",
+      "evidence": "configs/tables/README.md: 'bronze.pml: domain: cenace'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "bronze_pend_table",
+      "target": "zone_bronze",
+      "type": "belongs_to",
+      "label": "in bronze zone",
+      "evidence": "configs/tables/README.md: 'zone: bronze'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "bronze_pml_table",
+      "target": "zone_bronze",
+      "type": "belongs_to",
+      "label": "in bronze zone",
+      "evidence": "configs/tables/README.md: 'zone: bronze'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phoenix_lakehouse",
+      "target": "apache_iceberg",
+      "type": "uses",
+      "label": "core table format",
+      "evidence": "README.md: 'Table Format: Apache Iceberg'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phoenix_lakehouse",
+      "target": "gcs_storage",
+      "type": "uses",
+      "label": "storage layer",
+      "evidence": "README.md: 'Storage: GCS as the single data lake'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phoenix_lakehouse",
+      "target": "pyiceberg",
+      "type": "depends_on",
+      "label": "runtime dependency",
+      "evidence": "requirements.txt: 'pyiceberg[gcp]>=0.10.0'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phoenix_lakehouse",
+      "target": "pydantic",
+      "type": "depends_on",
+      "label": "runtime dependency",
+      "evidence": "requirements.txt: 'pydantic>=2.0.0'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phoenix_lakehouse",
+      "target": "pyyaml",
+      "type": "depends_on",
+      "label": "runtime dependency",
+      "evidence": "requirements.txt: 'PyYAML>=6.0'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phoenix_lakehouse",
+      "target": "google_cloud_storage_dep",
+      "type": "depends_on",
+      "label": "runtime dependency",
+      "evidence": "requirements.txt: 'google-cloud-storage>=2.10.0'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phoenix_lakehouse",
+      "target": "google_auth_dep",
+      "type": "depends_on",
+      "label": "runtime dependency",
+      "evidence": "requirements.txt: 'google-auth>=2.23.0'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "data_pipeline_repo",
+      "target": "phoenix_lakehouse",
+      "type": "depends_on",
+      "label": "imports lakehouse_core for contracts and paths",
+      "evidence": "gptreadmegoals.md: 'data-pipeline: Uses lakehouse-core to know where to write'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "data_manager_repo",
+      "target": "phoenix_lakehouse",
+      "type": "depends_on",
+      "label": "imports lakehouse_core for table contracts",
+      "evidence": "gptreadmegoals.md: 'data-manager: Uses lakehouse-core for table contracts'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "revenue_models_repo",
+      "target": "phoenix_lakehouse",
+      "type": "depends_on",
+      "label": "imports lakehouse_core to read/write gold tables",
+      "evidence": "gptreadmegoals.md: 'revenue-models: Uses lakehouse-core to read from gold tables'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "novafront_repo",
+      "target": "novagrid_lakehouse_bucket",
+      "type": "reads_from",
+      "label": "reference consumer of canonical warehouse",
+      "evidence": "docs/new_arq.md: 'novafront on novagrid-lakehouse; already aligned and should become the reference consumer'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "novagrid_repo",
+      "target": "novagrid_lakehouse_bucket",
+      "type": "reads_from",
+      "label": "reads canonical lakehouse data",
+      "evidence": "docs/new_arq.md: 'Standardize novagrid reads on the canonical contract and canonical warehouse'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "cenace_workers",
+      "target": "novagrid_lakehouse_bucket",
+      "type": "writes_to",
+      "label": "writes bronze into canonical warehouse",
+      "evidence": "docs/new_arq.md: 'cenace_workers is the primary supported ingestion/backfill path'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "cenace_workers",
+      "target": "data_pipeline_repo",
+      "type": "belongs_to",
+      "label": "component within data_pipeline",
+      "evidence": "docs/new_arq.md: 'Canonical ingestion/backfill path: data_pipeline/cenace_workers'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "unification_plan",
+      "target": "novagrid_lakehouse_bucket",
+      "type": "establishes",
+      "label": "designates as canonical warehouse",
+      "evidence": "docs/new_arq.md: 'Canonical warehouse and bucket: gs://novagrid-lakehouse'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "unification_plan",
+      "target": "lakehouse_phoenix_bucket",
+      "type": "deprecates",
+      "label": "reclassifies as legacy_parquet_archive",
+      "evidence": "docs/new_arq.md: 'Reclassify lakehouse_phoenix as legacy_parquet_archive'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "unification_plan",
+      "target": "novogrid_workqueue_bucket",
+      "type": "deprecates",
+      "label": "reclassifies as legacy_workqueue_archive",
+      "evidence": "docs/new_arq.md: 'novogrid-workqueue as legacy_workqueue_archive'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "migration_parquet_to_iceberg",
+      "target": "data_pipeline_repo",
+      "type": "executed_in",
+      "label": "migration scripts live in data-pipeline repo",
+      "evidence": "docs/MIGRATION_PLAN.md: 'Migration work happens in the data-pipeline repo'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "migration_parquet_to_iceberg",
+      "target": "phoenix_lakehouse",
+      "type": "uses",
+      "label": "uses lakehouse_core for contracts and paths during migration",
+      "evidence": "docs/MIGRATION_PLAN.md: migration script imports from lakehouse_core",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "migration_parquet_to_iceberg",
+      "target": "bronze_pend_table",
+      "type": "targets",
+      "label": "migrates PEND data into bronze.pend Iceberg table",
+      "evidence": "docs/MIGRATION_PLAN.md: Phase 2 migrate_pend()",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "migration_parquet_to_iceberg",
+      "target": "bronze_pml_table",
+      "type": "targets",
+      "label": "migrates PML data into bronze.pml Iceberg table",
+      "evidence": "docs/MIGRATION_PLAN.md: Phase 2 migrate_pml()",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "design_principle_storage_sor",
+      "target": "gcs_storage",
+      "type": "rationale_for",
+      "label": "justifies GCS+Iceberg as system of record over disposable compute",
+      "evidence": "gptreadmegoals.md: 'Storage (GCS + Iceberg) is the system of record; compute engines are disposable'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "design_principle_storage_sor",
+      "target": "apache_iceberg",
+      "type": "rationale_for",
+      "label": "justifies Iceberg as core table format",
+      "evidence": "gptreadmegoals.md: 'Storage (GCS + Iceberg) is the system of record'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "design_principle_no_hardcoded_paths",
+      "target": "lakehouse_core_paths",
+      "type": "rationale_for",
+      "label": "justifies centralized path helpers",
+      "evidence": "gptreadmegoals.md: 'No repo hardcodes paths or schemas; all table definitions and layout live in lakehouse-core'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "design_principle_pure_library",
+      "target": "phoenix_lakehouse",
+      "type": "rationale_for",
+      "label": "justifies strict library boundary: no ETL, no Prefect, no API calls",
+      "evidence": "clearreadme.md: 'It's a library, not a system'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "design_principle_raw_preservation",
+      "target": "zone_raw",
+      "type": "rationale_for",
+      "label": "justifies immutable raw zone for replay and debugging",
+      "evidence": "gptreadmegoals.md: 'Always keep a raw copy of source data'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "design_principle_pinned_contracts",
+      "target": "unification_plan",
+      "type": "rationale_for",
+      "label": "justifies pinned version discipline to eliminate drift",
+      "evidence": "docs/new_arq.md: 'consumers use it through pinned versions rather than unbounded dynamic drift'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "bigquery_not_catalog",
+      "target": "hadoop_catalog",
+      "type": "rationale_for",
+      "label": "justifies file-based catalog choice over BigQuery catalog",
+      "evidence": "SETUP.md: 'BigQuery is not used as an Iceberg catalog in this repo'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "modular_table_contracts",
+      "target": "table_contracts_dir",
+      "type": "rationale_for",
+      "label": "justifies domain-specific YAML files over monolithic config",
+      "evidence": "README.md: 'The modular approach scales better as you add more domains'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "hadoop_catalog",
+      "target": "sql_sqlite_catalog",
+      "type": "semantically_similar_to",
+      "label": "both are lightweight Iceberg catalog implementations avoiding external services; docs reference both approaches at different points",
+      "evidence": "SETUP.md describes Hadoop/file-based; CATALOG_SETUP.md describes SQL/SQLite; both avoid BigQuery",
+      "extraction_type": "INFERRED",
+      "confidence_score": 0.75
+    },
+    {
+      "source": "table_contract_concept",
+      "target": "naming_conventions",
+      "type": "enforces",
+      "label": "table contracts enforce naming conventions and standards",
+      "evidence": "docs/ADDING_NEW_DATASETS.md: naming conventions are part of contract validation",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "data_pipeline_repo",
+      "target": "zone_bronze",
+      "type": "writes_to",
+      "label": "writes raw data to bronze Iceberg tables",
+      "evidence": "gptreadmegoals.md: 'Parse and write to Iceberg bronze.energy_prices'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "data_manager_repo",
+      "target": "zone_silver",
+      "type": "writes_to",
+      "label": "writes enriched data to silver tables",
+      "evidence": "gptreadmegoals.md: 'Writes outputs into silver and gold Iceberg tables'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "data_manager_repo",
+      "target": "zone_gold",
+      "type": "writes_to",
+      "label": "writes enriched data to gold tables",
+      "evidence": "gptreadmegoals.md: 'Writes outputs into silver and gold Iceberg tables'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "revenue_models_repo",
+      "target": "zone_gold",
+      "type": "reads_from",
+      "label": "reads gold tables for Monte Carlo simulations",
+      "evidence": "gptreadmegoals.md: 'reads from gold tables (e.g. gold.price_features)'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "revenue_models_repo",
+      "target": "zone_gold",
+      "type": "writes_to",
+      "label": "writes simulation results back to gold zone",
+      "evidence": "gptreadmegoals.md: 'Writes results back as Iceberg tables in gold'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "duckdb",
+      "target": "apache_iceberg",
+      "type": "reads",
+      "label": "optional local analytics reading Iceberg/Parquet",
+      "evidence": "gptreadmegoals.md: 'DuckDB reading Iceberg/Parquet on GCS for quick modeling'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "bigquery",
+      "target": "apache_iceberg",
+      "type": "reads",
+      "label": "optional compute accessing Iceberg via BigLake external tables",
+      "evidence": "gptreadmegoals.md: 'access Iceberg tables via BigLake/external tables'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "data_pipeline_repo",
+      "target": "prefect",
+      "type": "uses",
+      "label": "uses Prefect for ETL orchestration",
+      "evidence": "gptreadmegoals.md: 'Orchestration: Prefect for running flows in data-pipeline'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phoenix_lakehouse",
+      "target": "prefect",
+      "type": "excludes",
+      "label": "explicitly excludes Prefect; no orchestration in library",
+      "evidence": "clearreadme.md: 'There are no Prefect imports anywhere'",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "medallion_architecture",
+      "label": "Medallion Architecture (Raw/Bronze/Silver/Gold)",
+      "description": "Four-zone data architecture pattern: raw (immutable source), bronze (minimal structure), silver (cleaned/normalized), gold (business-ready); defines the data maturity progression across the entire lakehouse",
+      "nodes": ["zone_raw", "zone_bronze", "zone_silver", "zone_gold"],
+      "source_file": "README.md",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "id": "consumer_ecosystem",
+      "label": "Lakehouse Consumer Ecosystem",
+      "description": "Three external repos (data-pipeline, data-manager, revenue-models) all depend on phoenix_lakehouse as the single source of truth for contracts, paths, and catalog access; each handles a different stage of the data lifecycle",
+      "nodes": ["data_pipeline_repo", "data_manager_repo", "revenue_models_repo", "phoenix_lakehouse"],
+      "source_file": "gptreadmegoals.md",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "id": "bucket_lifecycle",
+      "label": "GCS Bucket Lifecycle (Active + Legacy)",
+      "description": "Three GCS buckets in different lifecycle states: novagrid-lakehouse (canonical active), lakehouse_phoenix (frozen legacy archive), novogrid-workqueue (frozen legacy); unification plan governs migration from legacy to canonical",
+      "nodes": ["novagrid_lakehouse_bucket", "lakehouse_phoenix_bucket", "novogrid_workqueue_bucket", "unification_plan"],
+      "source_file": "docs/new_arq.md",
+      "extraction_type": "EXTRACTED",
+      "confidence_score": 1.0
+    }
+  ]
+}

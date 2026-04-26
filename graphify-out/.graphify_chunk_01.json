@@ -1,0 +1,620 @@
+{
+  "nodes": [
+    {
+      "id": "lakehouse_core",
+      "type": "package",
+      "label": "lakehouse_core",
+      "description": "Core Python library providing contracts, configuration, catalog access, path helpers, and table management for the Iceberg + GCS lakehouse platform. Pure library with no ETL logic.",
+      "source_file": "src/lakehouse_core/__init__.py",
+      "version": "0.1.0"
+    },
+    {
+      "id": "LakehouseConfig",
+      "type": "class",
+      "label": "LakehouseConfig",
+      "description": "Pydantic model for lakehouse configuration: bucket, prefix, zones dict, catalog dict, and tables dict (table contracts). Validated on load.",
+      "source_file": "src/lakehouse_core/config.py"
+    },
+    {
+      "id": "ConfigError",
+      "type": "class",
+      "label": "ConfigError",
+      "description": "Custom exception raised for configuration errors (missing file, invalid YAML, duplicate table contracts).",
+      "source_file": "src/lakehouse_core/config.py"
+    },
+    {
+      "id": "get_lakehouse_config",
+      "type": "function",
+      "label": "get_lakehouse_config()",
+      "description": "Loads and caches lakehouse configuration from configs/lakehouse.yaml and modular configs/tables/*.yaml files. Merges table contracts with main config taking precedence.",
+      "source_file": "src/lakehouse_core/config.py"
+    },
+    {
+      "id": "_load_table_contracts",
+      "type": "function",
+      "label": "_load_table_contracts()",
+      "description": "Internal function that loads modular table contracts from configs/tables/*.yaml, merges them, and detects duplicates.",
+      "source_file": "src/lakehouse_core/config.py"
+    },
+    {
+      "id": "get_iceberg_catalog",
+      "type": "function",
+      "label": "get_iceberg_catalog()",
+      "description": "Returns a cached PyIceberg SQL catalog instance configured from lakehouse.yaml. Sets PYICEBERG_LEGACY_CURRENT_SNAPSHOT_ID env var. Supports only SQL (SQLite) catalog type.",
+      "source_file": "src/lakehouse_core/catalogs.py"
+    },
+    {
+      "id": "zone_prefix",
+      "type": "function",
+      "label": "zone_prefix()",
+      "description": "Returns the GCS prefix string for a given zone name (raw/bronze/silver/gold), using config zone mapping.",
+      "source_file": "src/lakehouse_core/paths.py"
+    },
+    {
+      "id": "table_prefix",
+      "type": "function",
+      "label": "table_prefix()",
+      "description": "Returns the GCS prefix for a table: {zone_prefix}{domain}/{table_base}/. Uses table contract to resolve domain.",
+      "source_file": "src/lakehouse_core/paths.py"
+    },
+    {
+      "id": "get_full_gcs_path",
+      "type": "function",
+      "label": "get_full_gcs_path()",
+      "description": "Returns the full GCS URI (gs://{bucket}/{table_prefix}) for Iceberg table storage location.",
+      "source_file": "src/lakehouse_core/paths.py"
+    },
+    {
+      "id": "get_table_identifier",
+      "type": "function",
+      "label": "get_table_identifier()",
+      "description": "Splits a dotted table name (e.g., 'bronze.pend') into a PyIceberg Identifier tuple (namespace, table_name).",
+      "source_file": "src/lakehouse_core/tables.py"
+    },
+    {
+      "id": "get_table_contract",
+      "type": "function",
+      "label": "get_table_contract()",
+      "description": "Retrieves the table contract dict from config.tables for a given fully-qualified table name.",
+      "source_file": "src/lakehouse_core/tables.py"
+    },
+    {
+      "id": "create_partition_spec",
+      "type": "function",
+      "label": "create_partition_spec()",
+      "description": "Creates a PyIceberg PartitionSpec from a list of partition key names and a schema, using IdentityTransform. Partition field IDs start at 1000.",
+      "source_file": "src/lakehouse_core/tables.py"
+    },
+    {
+      "id": "create_bronze_table",
+      "type": "function",
+      "label": "create_bronze_table()",
+      "description": "Creates an Iceberg table in the catalog using the table contract, partition spec, and GCS location. Supports overwrite mode.",
+      "source_file": "src/lakehouse_core/tables.py"
+    },
+    {
+      "id": "schemas_module",
+      "type": "module",
+      "label": "lakehouse_core.schemas",
+      "description": "Provides PyIceberg type re-exports (Schema, NestedField, StringType, TimestampType, etc.). Domain-specific schemas belong in consuming repositories, not here.",
+      "source_file": "src/lakehouse_core/schemas/__init__.py"
+    },
+    {
+      "id": "master_schemas_module",
+      "type": "module",
+      "label": "lakehouse_core.schemas.master_schemas",
+      "description": "Kept for backward compatibility. Re-exports Schema and NestedField. Explicitly states domain-specific schemas should not be defined here.",
+      "source_file": "src/lakehouse_core/schemas/master_schemas.py"
+    },
+    {
+      "id": "bootstrap_bronze_script",
+      "type": "script",
+      "label": "bootstrap_bronze.py",
+      "description": "CLI script that migrates consolidated Parquet files into Bronze Iceberg tables. Reads parquet, converts Arrow schema to Iceberg, creates tables via lakehouse_core API, and appends data.",
+      "source_file": "scripts/bootstrap_bronze.py"
+    },
+    {
+      "id": "validate_table_contract_script",
+      "type": "script",
+      "label": "validate_table_contract.py",
+      "description": "CLI validation script that checks table contracts against lakehouse standards: required fields (domain, zone, schema, partition_by), valid zones, naming conventions (lowercase snake_case), schema key conventions.",
+      "source_file": "scripts/validate_table_contract.py"
+    },
+    {
+      "id": "setup_ps1",
+      "type": "script",
+      "label": "setup.ps1",
+      "description": "PowerShell setup script that creates a Python venv, installs lakehouse-core in editable mode, and optionally installs dev dependencies.",
+      "source_file": "setup.ps1"
+    },
+    {
+      "id": "table_contract_concept",
+      "type": "concept",
+      "label": "Table Contract",
+      "description": "A YAML-defined metadata record for each Iceberg table specifying domain, zone, schema key, partition_by list, and optional description. Contracts are the core abstraction that consuming repos use to know table layout."
+    },
+    {
+      "id": "zone_architecture",
+      "type": "concept",
+      "label": "Medallion Zone Architecture",
+      "description": "Four-zone data architecture: raw (immutable source), bronze (minimally transformed), silver (cleaned/normalized), gold (features/metrics/results). Zones map to GCS prefixes.",
+      "source_file": "ARCHITECTURE.md"
+    },
+    {
+      "id": "modular_config_pattern",
+      "type": "concept",
+      "label": "Modular Config Pattern",
+      "description": "Table contracts are split into per-domain YAML files under configs/tables/ (cenace.yaml, weather.yaml, revenue.yaml) and auto-merged at load time. Main lakehouse.yaml takes precedence on conflicts.",
+      "source_file": "ARCHITECTURE.md"
+    },
+    {
+      "id": "gcs_storage_layout",
+      "type": "concept",
+      "label": "GCS Storage Layout",
+      "description": "GCS bucket gs://lakehouse_phoenix/ with top-level directories: iceberg/ (catalog metadata warehouse), raw/, bronze/, silver/, gold/. Each zone has domain subdirectories per table contract.",
+      "source_file": "ARCHITECTURE.md"
+    },
+    {
+      "id": "pure_library_constraint",
+      "type": "concept",
+      "label": "Pure Library Constraint",
+      "description": "phoenix_lakehouse must be a pure library: no ETL, no APIs, no Prefect, no data processing. Only defines contracts and configuration. Consuming repos do the actual work.",
+      "source_file": "DESIGN_CONSTRAINTS.md"
+    },
+    {
+      "id": "hadoop_catalog_constraint",
+      "type": "concept",
+      "label": "File-Based Catalog Constraint",
+      "description": "Only file-based/Hadoop-style Iceberg catalog on GCS is allowed. No BigQuery catalog. All metadata under gs://lakehouse_phoenix/iceberg/. BigQuery may be used as compute engine in consuming repos but not as catalog here.",
+      "source_file": "DESIGN_CONSTRAINTS.md"
+    },
+    {
+      "id": "pend_dataset",
+      "type": "dataset",
+      "label": "PEND (Precios de Energia en Nodos Distribuidos)",
+      "description": "CENACE energy prices by load zone. Schema: timestamp, zone, pz, pz_ene, pz_per, pz_cng, market, region. Partitioned by market/region/zone/year. ~100+ zones, hourly data.",
+      "source_file": "DATA_ANALYSIS.md"
+    },
+    {
+      "id": "pml_dataset",
+      "type": "dataset",
+      "label": "PML (Precios Marginales Locales)",
+      "description": "CENACE locational marginal prices by node. Schema: timestamp, node, pml, pml_ene, pml_per, pml_cng, market, region. Partitioned by market/region/node/year. Hourly data.",
+      "source_file": "DATA_ANALYSIS.md"
+    },
+    {
+      "id": "migration_strategy",
+      "type": "concept",
+      "label": "Lakehouse Migration Strategy",
+      "description": "Four-phase migration: (1) Define contracts in lakehouse.yaml, (2) Migrate consolidated Parquet to Bronze Iceberg in GCS, (3) Upload raw data to GCS raw zone, (4) Update pipeline to write directly to Iceberg.",
+      "source_file": "DATA_ANALYSIS.md"
+    },
+    {
+      "id": "cenace_domain",
+      "type": "domain",
+      "label": "CENACE Domain",
+      "description": "Mexican electricity market data domain. Contains PEND and PML datasets from CENACE (Centro Nacional de Control de Energia). Tables live under cenace/ subdirectory in each zone."
+    },
+    {
+      "id": "consuming_repos",
+      "type": "concept",
+      "label": "Consuming Repositories",
+      "description": "Repositories that import lakehouse_core as a dependency: data-pipeline, data-manager, revenue-models. They define domain-specific schemas and perform actual ETL/processing.",
+      "source_file": "ARCHITECTURE.md"
+    },
+    {
+      "id": "rationale_pure_library",
+      "type": "rationale",
+      "label": "Why Pure Library Design",
+      "description": "phoenix_lakehouse is kept as a pure library to enforce separation of concerns: contracts/config here, ETL/processing in consuming repos. This prevents coupling between layout definitions and processing logic, allows independent versioning, and keeps the dependency tree minimal.",
+      "source_file": "DESIGN_CONSTRAINTS.md"
+    },
+    {
+      "id": "rationale_hadoop_catalog",
+      "type": "rationale",
+      "label": "Why File-Based Catalog Over BigQuery",
+      "description": "File-based/Hadoop catalog chosen over BigQuery catalog because: single source of truth stored in GCS, no external catalog service dependencies, all metadata portable under warehouse path, simpler operational model. BigQuery explicitly excluded from catalog role.",
+      "source_file": "ARCHITECTURE.md"
+    },
+    {
+      "id": "rationale_modular_config",
+      "type": "rationale",
+      "label": "Why Modular Config Layout",
+      "description": "Table contracts split per-domain for modularity (each domain self-contained), scalability (add domains without touching existing configs), maintainability (clear separation), and clean git diffs per domain.",
+      "source_file": "ARCHITECTURE.md"
+    },
+    {
+      "id": "rationale_schemas_in_consumers",
+      "type": "rationale",
+      "label": "Why Schemas Belong in Consuming Repos",
+      "description": "Domain-specific schemas (PEND, PML column definitions) are defined in consuming repositories, not in lakehouse_core. This keeps the core library domain-agnostic and avoids forcing all consumers to update when one domain's schema changes.",
+      "source_file": "src/lakehouse_core/schemas/master_schemas.py"
+    },
+    {
+      "id": "sql_catalog_discrepancy",
+      "type": "observation",
+      "label": "Catalog Type Discrepancy (SQL vs Hadoop)",
+      "description": "DESIGN_CONSTRAINTS.md and ARCHITECTURE.md state 'hadoop' catalog type, but catalogs.py implementation only supports 'sql' (SQLite) catalog type. This is a discrepancy between documentation and code."
+    }
+  ],
+  "edges": [
+    {
+      "source": "get_lakehouse_config",
+      "target": "LakehouseConfig",
+      "relationship": "returns",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "get_lakehouse_config() returns a LakehouseConfig Pydantic model instance"
+    },
+    {
+      "source": "get_lakehouse_config",
+      "target": "_load_table_contracts",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "get_lakehouse_config calls _load_table_contracts to load modular table YAML files"
+    },
+    {
+      "source": "get_iceberg_catalog",
+      "target": "get_lakehouse_config",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "get_iceberg_catalog calls get_lakehouse_config to obtain catalog settings"
+    },
+    {
+      "source": "zone_prefix",
+      "target": "get_lakehouse_config",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "zone_prefix loads config if not provided as argument"
+    },
+    {
+      "source": "table_prefix",
+      "target": "zone_prefix",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "table_prefix delegates to zone_prefix to build the zone portion of the path"
+    },
+    {
+      "source": "table_prefix",
+      "target": "get_table_contract",
+      "relationship": "uses",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "table_prefix reads the table contract from config to resolve the domain subdirectory"
+    },
+    {
+      "source": "get_full_gcs_path",
+      "target": "table_prefix",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "get_full_gcs_path delegates to table_prefix and prepends gs://{bucket}/"
+    },
+    {
+      "source": "get_table_contract",
+      "target": "get_lakehouse_config",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "get_table_contract loads config if not provided"
+    },
+    {
+      "source": "create_bronze_table",
+      "target": "get_table_contract",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "create_bronze_table retrieves the table contract to get partition_by keys"
+    },
+    {
+      "source": "create_bronze_table",
+      "target": "create_partition_spec",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "create_bronze_table delegates partition spec creation to create_partition_spec"
+    },
+    {
+      "source": "create_bronze_table",
+      "target": "get_full_gcs_path",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "create_bronze_table uses get_full_gcs_path for table storage location"
+    },
+    {
+      "source": "create_bronze_table",
+      "target": "get_iceberg_catalog",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "create_bronze_table obtains the catalog to call catalog.create_table"
+    },
+    {
+      "source": "create_bronze_table",
+      "target": "get_table_identifier",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "create_bronze_table resolves the identifier tuple for catalog operations"
+    },
+    {
+      "source": "bootstrap_bronze_script",
+      "target": "get_lakehouse_config",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "bootstrap_bronze.py calls get_lakehouse_config to load configuration"
+    },
+    {
+      "source": "bootstrap_bronze_script",
+      "target": "get_iceberg_catalog",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "bootstrap_bronze.py calls get_iceberg_catalog to obtain catalog instance"
+    },
+    {
+      "source": "bootstrap_bronze_script",
+      "target": "get_table_contract",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "bootstrap_bronze.py calls get_table_contract to validate table exists"
+    },
+    {
+      "source": "bootstrap_bronze_script",
+      "target": "create_bronze_table",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "bootstrap_bronze.py calls create_bronze_table to create Iceberg tables"
+    },
+    {
+      "source": "bootstrap_bronze_script",
+      "target": "get_full_gcs_path",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "bootstrap_bronze.py imports get_full_gcs_path from lakehouse_core.paths"
+    },
+    {
+      "source": "validate_table_contract_script",
+      "target": "get_lakehouse_config",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "validate_table_contract.py calls get_lakehouse_config to load contracts"
+    },
+    {
+      "source": "validate_table_contract_script",
+      "target": "get_table_contract",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "validate_table_contract.py calls get_table_contract to fetch contract dict"
+    },
+    {
+      "source": "validate_table_contract_script",
+      "target": "get_table_identifier",
+      "relationship": "calls",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "validate_table_contract.py calls get_table_identifier to check identifier format"
+    },
+    {
+      "source": "validate_table_contract_script",
+      "target": "table_contract_concept",
+      "relationship": "validates",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "The script enforces table contract standards: required fields, zone validity, naming conventions"
+    },
+    {
+      "source": "table_contract_concept",
+      "target": "LakehouseConfig",
+      "relationship": "stored_in",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "Table contracts are stored in LakehouseConfig.tables dict"
+    },
+    {
+      "source": "table_contract_concept",
+      "target": "modular_config_pattern",
+      "relationship": "implemented_by",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "Table contracts use the modular config pattern: per-domain YAML files merged at load time"
+    },
+    {
+      "source": "pend_dataset",
+      "target": "cenace_domain",
+      "relationship": "belongs_to",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "PEND is a CENACE dataset (domain: cenace)"
+    },
+    {
+      "source": "pml_dataset",
+      "target": "cenace_domain",
+      "relationship": "belongs_to",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "PML is a CENACE dataset (domain: cenace)"
+    },
+    {
+      "source": "pend_dataset",
+      "target": "table_contract_concept",
+      "relationship": "governed_by",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "PEND has a defined table contract: bronze.pend with partition_by [market, region, zone, year]"
+    },
+    {
+      "source": "pml_dataset",
+      "target": "table_contract_concept",
+      "relationship": "governed_by",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "PML has a defined table contract: bronze.pml with partition_by [market, region, node, year]"
+    },
+    {
+      "source": "gcs_storage_layout",
+      "target": "zone_architecture",
+      "relationship": "implements",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "GCS bucket layout implements the medallion zone architecture with raw/bronze/silver/gold directories"
+    },
+    {
+      "source": "get_full_gcs_path",
+      "target": "gcs_storage_layout",
+      "relationship": "implements",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "get_full_gcs_path constructs paths according to the GCS storage layout"
+    },
+    {
+      "source": "zone_prefix",
+      "target": "zone_architecture",
+      "relationship": "implements",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "zone_prefix maps zone names to GCS path prefixes per the medallion architecture"
+    },
+    {
+      "source": "get_iceberg_catalog",
+      "target": "hadoop_catalog_constraint",
+      "relationship": "implements",
+      "type": "INFERRED",
+      "confidence_score": 0.7,
+      "detail": "get_iceberg_catalog enforces catalog type constraints, though code uses SQL/SQLite rather than Hadoop as documented"
+    },
+    {
+      "source": "lakehouse_core",
+      "target": "pure_library_constraint",
+      "relationship": "adheres_to",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "DESIGN_CONSTRAINTS.md explicitly verifies the package contains no ETL, APIs, or Prefect code"
+    },
+    {
+      "source": "schemas_module",
+      "target": "consuming_repos",
+      "relationship": "delegates_schemas_to",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "schemas module explicitly states domain-specific schemas belong in consuming repositories"
+    },
+    {
+      "source": "bootstrap_bronze_script",
+      "target": "migration_strategy",
+      "relationship": "implements_phase_2",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "bootstrap_bronze.py implements Phase 2 of the migration strategy: migrate consolidated Parquet to Bronze Iceberg"
+    },
+    {
+      "source": "rationale_pure_library",
+      "target": "pure_library_constraint",
+      "relationship": "rationale_for",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "Explains why the pure library constraint exists: separation of concerns, independent versioning, minimal dependencies"
+    },
+    {
+      "source": "rationale_hadoop_catalog",
+      "target": "hadoop_catalog_constraint",
+      "relationship": "rationale_for",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "Explains why file-based catalog was chosen over BigQuery: single source of truth, no external dependencies, portability"
+    },
+    {
+      "source": "rationale_modular_config",
+      "target": "modular_config_pattern",
+      "relationship": "rationale_for",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "Explains why configs are split per-domain: modularity, scalability, maintainability, clean diffs"
+    },
+    {
+      "source": "rationale_schemas_in_consumers",
+      "target": "schemas_module",
+      "relationship": "rationale_for",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "Explains why schemas are not in lakehouse_core: keeps core domain-agnostic, avoids cross-domain coupling"
+    },
+    {
+      "source": "sql_catalog_discrepancy",
+      "target": "hadoop_catalog_constraint",
+      "relationship": "contradicts",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "catalogs.py supports type='sql' (SQLite) while docs state type must be 'hadoop'. Code and documentation are out of sync."
+    },
+    {
+      "source": "sql_catalog_discrepancy",
+      "target": "get_iceberg_catalog",
+      "relationship": "observed_in",
+      "type": "EXTRACTED",
+      "confidence_score": 1.0,
+      "detail": "The discrepancy is visible in get_iceberg_catalog which checks for 'sql' type"
+    },
+    {
+      "source": "pend_dataset",
+      "target": "pml_dataset",
+      "relationship": "semantically_similar_to",
+      "type": "INFERRED",
+      "confidence_score": 0.85,
+      "detail": "Both are CENACE electricity market pricing datasets with nearly identical schema structure (timestamp, price components, market, region), differing only in granularity (zone vs node)"
+    },
+    {
+      "source": "master_schemas_module",
+      "target": "schemas_module",
+      "relationship": "semantically_similar_to",
+      "type": "INFERRED",
+      "confidence_score": 0.9,
+      "detail": "Both modules re-export PyIceberg types and serve as schema utilities. master_schemas is a legacy subset of the schemas __init__"
+    },
+    {
+      "source": "validate_table_contract_script",
+      "target": "bootstrap_bronze_script",
+      "relationship": "semantically_similar_to",
+      "type": "INFERRED",
+      "confidence_score": 0.65,
+      "detail": "Both are CLI scripts that operate on table contracts, though validate checks standards and bootstrap performs data migration"
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "bronze_table_creation_flow",
+      "label": "Bronze Table Creation Flow",
+      "description": "The complete flow for creating a Bronze Iceberg table: config is loaded, table contract is retrieved, partition spec is built from contract keys, GCS path is resolved, and catalog.create_table is called. This flow connects config, contracts, paths, partitioning, and catalog into a single coordinated operation.",
+      "node_ids": ["get_lakehouse_config", "get_table_contract", "create_partition_spec", "get_full_gcs_path", "get_iceberg_catalog", "create_bronze_table"],
+      "type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "id": "design_constraint_enforcement",
+      "label": "Design Constraint Enforcement Pattern",
+      "description": "The package enforces architectural boundaries through multiple mechanisms: pure library constraint (no ETL), catalog type restriction (file-based only), and schema delegation (domain schemas in consumers). These constraints work together to keep lakehouse_core focused.",
+      "node_ids": ["pure_library_constraint", "hadoop_catalog_constraint", "rationale_schemas_in_consumers", "lakehouse_core"],
+      "type": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "id": "cenace_data_migration_pipeline",
+      "label": "CENACE Data Migration Pipeline",
+      "description": "PEND and PML datasets from CENACE domain are migrated from consolidated Parquet to Bronze Iceberg tables via the bootstrap_bronze script, following the migration strategy phases. The table contracts govern the target structure.",
+      "node_ids": ["pend_dataset", "pml_dataset", "cenace_domain", "bootstrap_bronze_script", "migration_strategy", "table_contract_concept"],
+      "type": "EXTRACTED",
+      "confidence_score": 1.0
+    }
+  ]
+}

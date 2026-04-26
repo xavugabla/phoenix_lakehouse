@@ -1,0 +1,1 @@
+{"nodes": [{"id": "bootstrap_bronze_script", "type": "script", "label": "bootstrap_bronze.py", "description": "CLI script that migrates consolidated Parquet files into Bronze Iceberg tables. Reads parquet, converts Arrow schema to Iceberg, creates tables via lakehouse_core API, and appends data.", "source_file": "scripts/bootstrap_bronze.py"}], "edges": [], "hyperedges": []}

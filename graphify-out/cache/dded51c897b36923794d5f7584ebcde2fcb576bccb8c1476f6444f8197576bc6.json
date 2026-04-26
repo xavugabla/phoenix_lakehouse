@@ -1,0 +1,1 @@
+{"nodes": [{"id": "schemas_module", "type": "module", "label": "lakehouse_core.schemas", "description": "Provides PyIceberg type re-exports (Schema, NestedField, StringType, TimestampType, etc.). Domain-specific schemas belong in consuming repositories, not here.", "source_file": "src/lakehouse_core/schemas/__init__.py"}], "edges": [], "hyperedges": []}

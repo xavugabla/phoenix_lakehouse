@@ -1,0 +1,1 @@
+{"nodes": [{"id": "get_full_gcs_path_fn", "type": "function", "label": "get_full_gcs_path()", "description": "Returns fully qualified GCS URI for a table (e.g., 'gs://lakehouse_phoenix/bronze/cenace/pend/')", "source_file": "docs/MIGRATION_GUIDE.md"}], "edges": [], "hyperedges": []}

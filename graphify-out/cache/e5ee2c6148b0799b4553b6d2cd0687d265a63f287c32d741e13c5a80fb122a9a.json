@@ -1,0 +1,1 @@
+{"nodes": [{"id": "sql_sqlite_catalog", "type": "concept", "label": "SQL Catalog (SQLite)", "description": "Alternative catalog configuration mentioned in docs: SQLite stores catalog metadata locally while GCS stores table data; portable and simple", "source_file": "docs/CATALOG_SETUP.md"}], "edges": [], "hyperedges": []}

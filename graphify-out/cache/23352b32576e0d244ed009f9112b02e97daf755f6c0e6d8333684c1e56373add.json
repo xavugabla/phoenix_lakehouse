@@ -1,0 +1,1 @@
+{"nodes": [{"id": "get_iceberg_catalog", "type": "function", "label": "get_iceberg_catalog()", "description": "Returns a cached PyIceberg SQL catalog instance configured from lakehouse.yaml. Sets PYICEBERG_LEGACY_CURRENT_SNAPSHOT_ID env var. Supports only SQL (SQLite) catalog type.", "source_file": "src/lakehouse_core/catalogs.py"}], "edges": [], "hyperedges": []}
