@@ -1,0 +1,21 @@
+<!-- dev-agent-policy:start -->
+## Managed Agent Policy (Lax Safe Default)
+
+Policy profile: `lax_safe_v1`
+
+Capability flags:
+- `allow_scope_outside_active_repo`: false
+- `allow_destructive_git`: false
+- `allow_git_commit_without_authorization`: false
+- `allow_git_push_without_authorization`: false
+- `allow_branch_or_pr_without_authorization`: false
+- `allow_system_mutation_without_authorization`: false
+- `allow_security_policy_changes_without_authorization`: false
+- `allow_plaintext_secret_writes`: false
+- `allow_network_side_effects_without_authorization`: false
+
+Execution defaults:
+- Collaboration mode: lax (keep momentum, ask only when uncertainty is material).
+- Scope: active repo/path under `~/code` unless the user explicitly expands scope.
+- Validation: run lightweight targeted checks for changed files and report blockers.
+<!-- dev-agent-policy:end -->
