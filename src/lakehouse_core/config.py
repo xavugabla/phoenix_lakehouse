@@ -19,8 +19,10 @@ class LakehouseConfig(BaseModel):
     """Configuration for the Data Lakehouse platform."""
     bucket: str
     prefix: str = ""
+    warehouse: str = ""
     zones: Dict[str, str] = Field(default_factory=dict)
     catalog: Dict[str, str] = Field(default_factory=dict)
+    legacy: Dict[str, Any] = Field(default_factory=dict)
     tables: Dict[str, Dict[str, Any]] = Field(default_factory=dict)  # Allow Any for partition_by lists
 
 

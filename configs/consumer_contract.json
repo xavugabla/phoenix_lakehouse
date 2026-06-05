@@ -1,0 +1,20 @@
+{
+  "bucket": "novagrid-lakehouse",
+  "catalog": {
+    "type": "sql",
+    "uri": "sqlite:///iceberg_catalog.db",
+    "warehouse": "gs://novagrid-lakehouse/"
+  },
+  "contract_source": "phoenix_lakehouse",
+  "legacy": {
+    "bucket": "lakehouse_phoenix",
+    "warehouse": "gs://lakehouse_phoenix/"
+  },
+  "warehouse": "gs://novagrid-lakehouse/",
+  "zones": {
+    "bronze": "bronze",
+    "gold": "gold",
+    "raw": "raw",
+    "silver": "silver"
+  }
+}

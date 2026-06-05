@@ -47,6 +47,7 @@ from .tables import (
     create_partition_spec,
     create_bronze_table,
 )
+from .consumer import get_consumer_contract, write_consumer_contract
 
 __all__ = [
     "config",
@@ -60,5 +61,7 @@ __all__ = [
     "get_table_contract",
     "create_partition_spec",
     "create_bronze_table",
+    "get_consumer_contract",
+    "write_consumer_contract",
     "__version__",
 ]
