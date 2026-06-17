@@ -1,0 +1,79 @@
+# Dataset Contract: CENACE PML (Precios Marginales Locales)
+# Locational marginal prices by node
+
+dataset_id: cenace_pml
+version: "1.0.0"
+
+# Runtime parameters definition
+params:
+  - name: market
+    type: string
+    required: true
+    allowed_values: ["MDA", "MTR"]
+    description: "Market type: MDA (Day-Ahead) or MTR (Real-Time)"
+  
+  - name: region
+    type: string
+    required: true
+    allowed_values: ["BCA", "BCS", "SIN", "SON", "NOR", "OCC", "CEN", "ORI", "PEN"]
+    description: "CENACE region code"
+  
+  - name: start_date
+    type: string
+    required: true
+    description: "Start date in YYYY-MM-DD format"
+  
+  - name: end_date
+    type: string
+    required: true
+    description: "End date in YYYY-MM-DD format"
+  
+  - name: node
+    type: string
+    required: false
+    description: "Optional specific node ID (derived from data if not provided)"
+  
+  - name: year
+    type: integer
+    required: false
+    description: "Year for partitioning (derived from dates if not provided)"
+  
+  - name: node_filter
+    type: string
+    required: false
+    description: "Optional node ID filter"
+
+# Expected schema (columns and types)
+schema:
+  columns:
+    - name: market
+      type: string
+    - name: region
+      type: string
+    - name: node
+      type: string
+    - name: timestamp
+      type: timestamp
+    - name: price
+      type: double
+    - name: year
+      type: integer
+    - name: month
+      type: integer
+    - name: day
+      type: integer
+
+# Partitioning strategy (ordered keys)
+partitioning:
+  keys: ["market", "region", "node", "year"]
+
+# Storage path templates
+storage:
+  bronze: "bronze/cenace/pml"
+  silver: "silver/cenace/pml"
+  gold: "gold/cenace/pml_aggregated"
+
+# Source configuration
+source:
+  type: cenace_api
+  description: "CENACE public API for locational marginal prices"
